@@ -5,21 +5,19 @@ from struct import *
 import urwid
 import socket, sys
 
+scroll = 1
+
 palette = [('header', 'white', 'black'),
     ('reveal focus', 'black', 'dark cyan', 'standout')]
 
-items = [urwid.Text("foo"),
-         urwid.Text("bar"),
-         urwid.Text("baz")]
-
-content = urwid.SimpleListWalker([
-    urwid.AttrMap(w, None, 'reveal focus') for w in items])
-
+content = urwid.SimpleListWalker([])
 listbox = urwid.ListBox(content)
 
 show_key = urwid.Text("Press any key", wrap='clip')
 head = urwid.AttrMap(show_key, 'header')
-top = urwid.Frame(listbox, head)
+minibuf = urwid.Text(": ", wrap='clip')
+bottom = urwid.AttrMap(minibuf, 'header')
+top = urwid.Frame(listbox, head, bottom)
 
 def show_all_input(input, raw):
   return input
@@ -27,22 +25,6 @@ def show_all_input(input, raw):
 def exit_on_cr(input):
   if input in ('q', 'Q'):
     raise urwid.ExitMainLoop()
-  elif input == 'up':
-    scroll = 0
-    focus_widget, idx = listbox.get_focus()
-    idx = listbox.focus_position
-    show_key.set_text("focus %d" % (idx))
-    if idx > 0:
-      idx = idx - 1
-      listbox.set_focus(idx)
-  elif input == 'down':
-    scroll = 0
-    focus_widget, idx = listbox.get_focus()
-    if (idx == 0):
-      idx = focus_widget.focus_position
-    show_key.set_text("focus %d" % (idx))
-    idx = idx + 1
-    listbox.set_focus(idx)
 
 def eth_addr (a) :
   b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
@@ -68,12 +50,11 @@ def network_receive():
 
   if (eth_protocol == 8):
     t = urwid.Text('Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol))
-    urwid.AttrMap(t, None, 'reveal focus')
     
-    content.append(urwid.Text('Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol)))
+    content.append(urwid.AttrMap(t, None, 'reveal focus'))
 
     #if (scroll == 1):
-    #  listbox.set_focus(len(content))
+    #  listbox.set_focus(len(content) - 1)
 
 #Create the socket
 try:
