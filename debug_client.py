@@ -1,9 +1,99 @@
 #!/usr/bin/env python
 
+from struct import *
+
+import urwid
+import socket, sys
+
+palette = [('header', 'white', 'black'),
+    ('reveal focus', 'black', 'dark cyan', 'standout')]
+
+items = [urwid.Text("foo"),
+         urwid.Text("bar"),
+         urwid.Text("baz")]
+
+content = urwid.SimpleListWalker([
+    urwid.AttrMap(w, None, 'reveal focus') for w in items])
+
+listbox = urwid.ListBox(content)
+
+show_key = urwid.Text("Press any key", wrap='clip')
+head = urwid.AttrMap(show_key, 'header')
+top = urwid.Frame(listbox, head)
+
+def show_all_input(input, raw):
+  return input
+
+def exit_on_cr(input):
+  if input in ('q', 'Q'):
+    raise urwid.ExitMainLoop()
+  elif input == 'up':
+    scroll = 0
+    focus_widget, idx = listbox.get_focus()
+    idx = listbox.focus_position
+    show_key.set_text("focus %d" % (idx))
+    if idx > 0:
+      idx = idx - 1
+      listbox.set_focus(idx)
+  elif input == 'down':
+    scroll = 0
+    focus_widget, idx = listbox.get_focus()
+    if (idx == 0):
+      idx = focus_widget.focus_position
+    show_key.set_text("focus %d" % (idx))
+    idx = idx + 1
+    listbox.set_focus(idx)
+
+def eth_addr (a) :
+  b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
+  return b
+
+def out(s):
+  show_key.set_text(str(s))
+
+def network_receive():
+  i = 0
+
+  packet = s.recvfrom(65565)
+   
+  #packet string from tuple
+  packet = packet[0]
+   
+  #parse ethernet header
+  eth_length = 14
+   
+  eth_header = packet[:eth_length]
+  eth = unpack('!6s6sH' , eth_header)
+  eth_protocol = socket.ntohs(eth[2])
+
+  if (eth_protocol == 8):
+    t = urwid.Text('Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol))
+    urwid.AttrMap(t, None, 'reveal focus')
+    
+    content.append(urwid.Text('Destination MAC : ' + eth_addr(packet[0:6]) + ' Source MAC : ' + eth_addr(packet[6:12]) + ' Protocol : ' + str(eth_protocol)))
+
+    #if (scroll == 1):
+    #  listbox.set_focus(len(content))
+
+#Create the socket
+try:
+  s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
+except socket.error , msg:
+  print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+  sys.exit()
+
+loop = urwid.MainLoop(top, palette,
+    input_filter=show_all_input, unhandled_input=exit_on_cr)
+loop.watch_file(s, network_receive)
+try:
+  loop.run()
+except KeyboardInterrupt:
+  sys.exit(0)
+
+'''
 #Packet sniffer in python
 #For Linux - Sniffs all incoming and outgoing packets :)
 #Silver Moon (m00n.silv3r@gmail.com)
- 
 import socket, sys
 from struct import *
  
@@ -134,3 +224,5 @@ while True:
             print 'Protocol other than TCP/UDP/ICMP'
              
         print
+        '''
+
