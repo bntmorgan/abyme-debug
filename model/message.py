@@ -27,5 +27,4 @@ class Message():
     t = "A"
     l = "%d B" % (self.ethLength)
     # new type length addrSource addrDest
-    s = "%s %s %s %s %s" % (n, t, l, Message.ethAddr(self.ethMacSource), Message.ethAddr(self.ethMacDest))
-    return s
+    return "%s %s %s %s %s" % (n, t, l, Message.ethAddr(self.ethMacSource), Message.ethAddr(self.ethMacDest))
