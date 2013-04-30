@@ -12,10 +12,16 @@ class DebugClient():
   def __init__(self):
     self.network = None
     self.gui = None
+    self.createComponents()
     self.run()
-  def run(self):
+  def createComponents(self):
+    # Create all the components
     self.network = Network()
-    #self.gui = Gui(self.network)
+    self.gui = Gui()
+    # Share the pointers
+    self.gui.network = self.network
+  def run(self):
+    self.gui.run()
 
 # Debug client main
 debugClient = DebugClient()
