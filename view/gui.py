@@ -8,7 +8,9 @@ from model.message import Message
 
 class Gui():
   def __init__(self):
+    # pointers
     self.network = None
+    # graphical components
     self.listContent = None
     self.title = None
     self.minibuffer = None
@@ -21,6 +23,9 @@ class Gui():
         ('text', 'dark cyan', 'black'),
         ('reveal focus', 'black', 'dark cyan', 'standout')]
     self.initGraphicalComponents()
+    # gui control
+    self.step = 1
+    self.autoScroll = 1
   def initGraphicalComponents(self):
     self.listContent = urwid.SimpleListWalker([])
     self.listbox = urwid.ListBox(self.listContent)
@@ -50,9 +55,9 @@ class Gui():
     t = urwid.Text(message.format())
     # Add the message to the list
     self.listContent.append(urwid.AttrMap(t, None, 'reveal focus'))
-    #if (scroll == 1):
-    # Refresh focus
-    self.listbox.set_focus(len(self.listContent) - 1)
+    if (self.autoScroll == 1):
+      # Refresh focus
+      self.listbox.set_focus(len(self.listContent) - 1)
     # Refresh text content
     self.text.set_text("LOL DJEOIJDEZOI %d \n fezfezfez \n zeffzefez \n jfuiezjfizeu \n fezkofzekpo" % (len(self.listContent)))
   def exitOnCr(self,  input):
