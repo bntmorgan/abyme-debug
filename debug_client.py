@@ -20,6 +20,7 @@ class DebugClient():
     self.gui = Gui()
     # Share the pointers
     self.gui.network = self.network
+    self.network.gui = self.gui
   def run(self):
     self.gui.run()
 
