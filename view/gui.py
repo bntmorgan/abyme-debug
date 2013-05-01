@@ -34,7 +34,8 @@ class Gui():
         self.listbox, 
         urwid.AttrMap(urwid.Filler(self.text, valign = 'top'), 'text')]
     pile = urwid.Pile(widgets);
-    self.title = urwid.Text("Press any key", wrap='clip')
+    # List legend
+    self.title = urwid.Text("N Length Source address    Dest address      Type", wrap='clip')
     head = urwid.AttrMap(self.title, 'header')
     self.minibuf = urwid.Text(": ", wrap='clip')
     bottom = urwid.AttrMap(self.minibuf, 'header')

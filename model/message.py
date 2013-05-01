@@ -24,7 +24,7 @@ class Message():
     return b
   def format(self):
     n = "N" if self.new else " "
-    t = "A"
-    l = "%d B" % (self.ethLength)
-    # new type length addrSource addrDest
-    return "%s %s %s %s %s" % (n, t, l, Message.ethAddr(self.ethMacSource), Message.ethAddr(self.ethMacDest))
+    t = "VM exit"
+    l = "%04d B" % (self.ethLength)
+    # new length addrSource addrDest type
+    return "%s %s %s %s %s" % (n, l, Message.ethAddr(self.ethMacSource), Message.ethAddr(self.ethMacDest), t)
