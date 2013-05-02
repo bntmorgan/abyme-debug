@@ -27,7 +27,7 @@ class Network():
   def __init__(self):
     self.socket = None
     self.createSocket()
-    self.gui = None
+    self.debugClient = None
   def __del__(self):
     if (self.socket != None):
       self.socket.close()
@@ -44,9 +44,10 @@ class Network():
     # Create ethernet fream object filter protocol
     packet = packet[0]
     frame = EthernetFrame(packet)
-    self.gui.setMinibuf("etherType %d" % (frame.protocol))
     if (frame.protocol == Network.etherType):
-      self.debugClient.notifyMessage(MessageIn.createMessage(frame))
+      self.debugClient.notifyMessage(Message.createMessage(frame))
+      return 1
+    return 0
   def send(self, message):
     payload = message.pack()
     checksum = "\x1a\x2b\x3c\x4d"

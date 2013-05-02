@@ -24,8 +24,6 @@ class Gui():
         ('text', 'dark cyan', 'black'),
         ('reveal focus', 'black', 'dark cyan', 'standout')]
     self.initGraphicalComponents()
-    # gui control
-    self.autoScroll = 1
   def initGraphicalComponents(self):
     self.listContent = urwid.SimpleListWalker([])
     self.listbox = urwid.ListBox(self.listContent)
@@ -55,14 +53,12 @@ class Gui():
     t = urwid.Text(message.format())
     # Add the message to the list
     self.listContent.append(urwid.AttrMap(t, None, 'reveal focus'))
-    if (self.autoScroll == 1):
-      # Refresh focus
-      self.listbox.set_focus(len(self.listContent) - 1)
+  def messageFocus(self, number, message):
+    # Refresh focus
+    self.listbox.set_focus(number)
     # Refresh text content
     self.text.set_text("LOL DJEOIJDEZOI %d \n fezfezfez \n zeffzefez \n jfuiezjfizeu \n fezkofzekpo" % (len(self.listContent)))
-    self.setMinibuf("%d" % (len(self.listContent)))
   def exitOnCr(self,  input):
-    if input in ('q', 'Q'):
-      raise urwid.ExitMainLoop()
+    self.debugClient.notifyUserInput(input)
   def filterInput(self, input, raw):
     return input

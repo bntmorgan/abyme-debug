@@ -5,7 +5,7 @@ from struct import *
 import urwid
 import socket, sys
 
-from network import Network
+from network import *
 from view.gui import Gui
 from model.message import *
 
@@ -21,7 +21,7 @@ class DebugClient():
     self.gui = None
     self.createComponents()
     # Running mode
-    self.step = 1 # Wait user at every VMExit
+    self.step = 0 # Wait user at every VMExit
     self.mTF = 0 # Monitor Trap Flag is activated
     # User interactions
     self.wait = 0 # We are waiting for a user entry
@@ -34,11 +34,12 @@ class DebugClient():
     # Share the pointers
     self.gui.network = self.network
     self.gui.debugClient = self
-    self.network.gui = self.gui
     self.network.debugClient = self
   def run(self):
     self.gui.run()
   def notifyMessage(self, message):
+    if self.wait:
+      raise BadReply(-1)
     # TODO add the message into the model
     self.messages.append(message)
     message.number = self.messages.length()
@@ -53,15 +54,27 @@ class DebugClient():
       raise BadReply(message.messageType)
     # Adds here to the model and notifies the view of the changes
     self.gui.notifyMessage(message)
-  def setWait():
+    self.gui.messageFocus(message.number - 1, message)
+  def setWait(self):
     self.wait = 1
-  def endWait():
+  def endWait(self):
     self.wait = 0
     self.sendContinue()
-  def sendContinue():
+  def sendContinue(self):
     m = MessageExecContinue()
     self.network.send(m)
-
+  def notifyUserInput(self, input):
+    self.gui.setMinibuf(input)
+    if input in ('q', 'Q'):
+      raise urwid.ExitMainLoop()
+    if input == 's':
+      self.step = 1
+    if input == 'c':
+      self.step = 0
+    # We have to notify the debug server that we have finished to wait for user entry
+    # execution can continue
+    if input in ('s', 'c') and self.wait == 1:
+      self.endWait()
 
 # Debug client main
 try:
