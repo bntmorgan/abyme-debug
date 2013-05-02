@@ -42,39 +42,42 @@ class DebugClient():
       raise BadReply(-1)
     # TODO add the message into the model
     self.messages.append(message)
-    message.number = self.messages.length()
+    message.number = self.messages.length() - 1
     # Handle the message according to the type
     if message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
       if self.step:
-        self.wait = 1
+        self.setWait()
       else:
         self.sendContinue()
     else:
       raise BadReply(message.messageType)
     # Adds here to the model and notifies the view of the changes
     self.gui.notifyMessage(message)
-    self.gui.messageFocus(message.number - 1, message)
+    self.gui.messageFocus(message.number, message)
+  def sendContinue(self):
+    m = MessageExecContinue()
+    self.network.send(m)
+  def notifyUserInput(self, input):
+    if input in ('q', 'Q'):
+      raise urwid.ExitMainLoop()
+    if input == 's':
+      self.setStep()
+    if input == 'c':
+      self.endStep()
+    # We have to notify the debug server that we have finished to wait for user entry
+    # execution can continue
+    if input in ('s', 'c') and self.wait == 1:
+      self.endWait()
   def setWait(self):
     self.wait = 1
   def endWait(self):
     self.wait = 0
     self.sendContinue()
-  def sendContinue(self):
-    m = MessageExecContinue()
-    self.network.send(m)
-  def notifyUserInput(self, input):
-    self.gui.setMinibuf(input)
-    if input in ('q', 'Q'):
-      raise urwid.ExitMainLoop()
-    if input == 's':
-      self.step = 1
-    if input == 'c':
-      self.step = 0
-    # We have to notify the debug server that we have finished to wait for user entry
-    # execution can continue
-    if input in ('s', 'c') and self.wait == 1:
-      self.endWait()
+  def setStep(self):
+    self.step = 1
+  def endStep(self):
+    self.step = 0
 
 # Debug client main
 try:

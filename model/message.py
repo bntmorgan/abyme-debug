@@ -70,13 +70,27 @@ class MessageIn(Message):
     l = "%04d B" % (self.frame.headerLength)
     # new length addrSource addrDest type
     return "%04d %s %s %s %s" % (self.number, n, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
+  def formatFull(self):
+    n = "N" if self.new else " "
+    l = "%04d B" % (self.frame.headerLength)
+    # new length addrSource addrDest type
+    return "number : %04d\nnew : %s\nheader length : %s\nsrc address : %s\ndest address : %s" % (self.number, n, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
 
 class MessageVMExit(MessageIn):
   def __init__(self):
     super(MessageVMExit, self).__init__()
     self.messageType = Message.VMExit 
+    self.exitReason = 0xff
   def format(self):
     return "%s VMExit" % (super(MessageVMExit, self).format())
+  def unPack(self):
+    t = unpack('!BL', self.frame.payload[:5])
+    self.messageType = t[0]
+    self.exitReason = t[1]
+  def pack(self):
+    return pack('BL', self.messageType, self.exitReason)
+  def formatFull(self):
+    return super(MessageVMExit, self).formatFull() + "\nexit reason : %d" % (self.exitReason)
 
 '''
 Output messages

@@ -16,6 +16,7 @@ class DebugClient():
     self.runTest()
   def runTest(self):
     m = MessageVMExit()
+    m.exitReason = 30
     while(1):
       self.wait = 1
       self.network.send(m) 

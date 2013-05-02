@@ -57,7 +57,8 @@ class Gui():
     # Refresh focus
     self.listbox.set_focus(number)
     # Refresh text content
-    self.text.set_text("LOL DJEOIJDEZOI %d \n fezfezfez \n zeffzefez \n jfuiezjfizeu \n fezkofzekpo" % (len(self.listContent)))
+    self.text.set_text(message.formatFull())
+    self.setMinibuf("%s" % (number))
   def exitOnCr(self,  input):
     self.debugClient.notifyUserInput(input)
   def filterInput(self, input, raw):
