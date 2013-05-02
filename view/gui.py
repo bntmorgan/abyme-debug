@@ -10,6 +10,7 @@ class Gui():
   def __init__(self):
     # pointers
     self.network = None
+    self.debugClient = None
     # graphical components
     self.listContent = None
     self.title = None
@@ -24,22 +25,20 @@ class Gui():
         ('reveal focus', 'black', 'dark cyan', 'standout')]
     self.initGraphicalComponents()
     # gui control
-    self.step = 1
     self.autoScroll = 1
   def initGraphicalComponents(self):
     self.listContent = urwid.SimpleListWalker([])
     self.listbox = urwid.ListBox(self.listContent)
-    self.text = urwid.Text(u"", align='left')
-    widgets = [
-        self.listbox, 
-        urwid.AttrMap(urwid.Filler(self.text, valign = 'top'), 'text')]
-    pile = urwid.Pile(widgets);
     # List legend
     self.title = urwid.Text("N Length Source address    Dest address      Type", wrap='clip')
     head = urwid.AttrMap(self.title, 'header')
     self.minibuf = urwid.Text(": ", wrap='clip')
     bottom = urwid.AttrMap(self.minibuf, 'header')
-    self.top = urwid.Frame(pile, head, bottom)
+    self.text = urwid.Text(u"", align='left')
+    widgets = [
+        urwid.Frame(self.listbox, head, bottom),
+        urwid.AttrMap(urwid.Filler(self.text, valign = 'top'), 'text')]
+    self.top = urwid.Pile(widgets);
   def setTitle(self, title):
     self.title.set_text(title)
   def setMinibuf(self, minibuf):
@@ -61,9 +60,9 @@ class Gui():
       self.listbox.set_focus(len(self.listContent) - 1)
     # Refresh text content
     self.text.set_text("LOL DJEOIJDEZOI %d \n fezfezfez \n zeffzefez \n jfuiezjfizeu \n fezkofzekpo" % (len(self.listContent)))
+    self.setMinibuf("%d" % (len(self.listContent)))
   def exitOnCr(self,  input):
     if input in ('q', 'Q'):
       raise urwid.ExitMainLoop()
   def filterInput(self, input, raw):
     return input
-
