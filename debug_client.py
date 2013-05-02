@@ -28,6 +28,7 @@ class DebugClient():
     self.run()
   def createComponents(self):
     # Create all the components
+    self.messages = Messages()
     self.network = Network()
     self.gui = Gui()
     # Share the pointers
@@ -38,9 +39,9 @@ class DebugClient():
   def run(self):
     self.gui.run()
   def notifyMessage(self, message):
-    # Adds here to the model and notifies the view of the changes
-    self.gui.notifyMessage(message)
     # TODO add the message into the model
+    self.messages.append(message)
+    message.number = self.messages.length()
     # Handle the message according to the type
     if message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
@@ -50,6 +51,8 @@ class DebugClient():
         self.sendContinue()
     else:
       raise BadReply(message.messageType)
+    # Adds here to the model and notifies the view of the changes
+    self.gui.notifyMessage(message)
   def setWait():
     self.wait = 1
   def endWait():
@@ -63,5 +66,5 @@ class DebugClient():
 # Debug client main
 try:
   debugClient = DebugClient()
-except BaseException, msg:
+except BadReply, msg:
   print("%s\n" % (msg))

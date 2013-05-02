@@ -30,7 +30,7 @@ class Gui():
     self.listContent = urwid.SimpleListWalker([])
     self.listbox = urwid.ListBox(self.listContent)
     # List legend
-    self.title = urwid.Text("N Length Source address    Dest address      Type", wrap='clip')
+    self.title = urwid.Text("#    N Length Source address    Dest address      Type", wrap='clip')
     head = urwid.AttrMap(self.title, 'header')
     self.minibuf = urwid.Text(": ", wrap='clip')
     bottom = urwid.AttrMap(self.minibuf, 'header')

@@ -2,6 +2,21 @@ from struct import *
 
 import socket, sys
 
+'''
+Message collection
+'''
+class Messages(object):
+  def __init__(self):
+    self.messages = [];
+  def append(self, message):
+    self.messages.append(message)
+  def length(self):
+    return len(self.messages)
+
+'''
+Message
+'''
+
 class Message(object):
   # Message Types
   (
@@ -22,15 +37,17 @@ class MessageIn(Message):
     super(MessageIn, self).__init__()
     # GUI
     self.new = 1
+    self.number = 0
   @staticmethod
   def ethAddr (a):
     b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]), ord(a[3]), ord(a[4]), ord(a[5]))
     return b
   def format(self):
     n = "N" if self.new else " "
+    n = "N" if self.new else " "
     l = "%04d B" % (self.frame.headerLength)
     # new length addrSource addrDest type
-    return "%s %s %s %s" % (n, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
+    return "%04d %s %s %s %s" % (self.number, n, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
   def pack(self):
     return pack('B', self.messageType)
   def unPack(self):
