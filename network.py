@@ -10,7 +10,7 @@ class EthernetFrame():
     headerLength = 14
     header = packet[:headerLength]
     eth = unpack('!6s6sH', header)
-    protocol = socket.ntohs(eth[2])
+    protocol = eth[2]
     # Ethernet
     self.macSource = packet[0:6]
     self.macDest = packet[6:12]
@@ -33,8 +33,8 @@ class Network():
       self.socket.close()
   def createSocket(self):
     try:
-      #self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
-      self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
+      self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
+      #self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
       self.socket.bind(("eth0", 0))
     except socket.error , msg:
       print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
@@ -44,7 +44,8 @@ class Network():
     # Create ethernet fream object filter protocol
     packet = packet[0]
     frame = EthernetFrame(packet)
-    if (frame.protocol == 8):
+    self.gui.setMinibuf("etherType %d" % (frame.protocol))
+    if (frame.protocol == Network.etherType):
       self.debugClient.notifyMessage(MessageIn.createMessage(frame))
   def send(self, message):
     payload = message.pack()

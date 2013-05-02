@@ -20,12 +20,12 @@ class DebugClient():
     self.network = None
     self.gui = None
     self.createComponents()
-    self.run()
     # Running mode
     self.step = 1 # Wait user at every VMExit
     self.mTF = 0 # Monitor Trap Flag is activated
     # User interactions
     self.wait = 0 # We are waiting for a user entry
+    self.run()
   def createComponents(self):
     # Create all the components
     self.network = Network()

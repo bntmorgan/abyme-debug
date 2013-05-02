@@ -46,6 +46,7 @@ class MessageIn(Message):
     if m.messageType == Message.VMExit:
       m = MessageVMExit()
     #real unpack if changed
+    m.frame = frame
     m.unPack()
     return m
 
