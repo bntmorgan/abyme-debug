@@ -15,6 +15,7 @@ class EthernetFrame():
     self.macDest = packet[6:12]
     self.protocol = protocol
     self.headerLength = headerLength
+    self.payload = packet[headerLength:]
 
 class Network():
   macSource = "\xd4\xbe\xd9\x39\xc8\x46"

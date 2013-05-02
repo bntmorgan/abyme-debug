@@ -2,17 +2,16 @@ from struct import *
 
 import socket, sys
 
-class Message():
+class Message(object):
   # Message Types
   (
+      Message,
       VMExit,
       ExecContinue,
       ExecStep,
-  ) = range(3)
+  ) = range(4)
   def __init__(self):
-    self.messageType = 0
-  def pack(self):
-    return pack('B', self.messageType)
+    self.messageType = Message.Message
 
 '''
 Input messages
@@ -21,8 +20,6 @@ Input messages
 class MessageIn(Message):
   def __init__(self):
     super(MessageIn, self).__init__()
-    # Debug protocol XXX
-    self.messageType = 0
     # GUI
     self.new = 1
   @staticmethod
@@ -31,20 +28,33 @@ class MessageIn(Message):
     return b
   def format(self):
     n = "N" if self.new else " "
-    t = "VM exit"
     l = "%04d B" % (self.frame.headerLength)
     # new length addrSource addrDest type
-    return "%s %s %s %s %s" % (n, l, Message.ethAddr(self.frame.macSource), Message.ethAddr(self.frame.macDest), t)
+    return "%s %s %s %s" % (n, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
+  def pack(self):
+    return pack('B', self.messageType)
+  def unPack(self):
+    t = unpack('!B', self.frame.payload[0])
+    self.messageType = t[0]
   @staticmethod
   def createMessage(frame):
-    m = MessageVMExit()
+    # get the type of the message
+    m = MessageIn();
     m.frame = frame
+    m.unPack()
+    # get the real message
+    if m.messageType == Message.VMExit:
+      m = MessageVMExit()
+    #real unpack if changed
+    m.unPack()
     return m
 
 class MessageVMExit(MessageIn):
   def __init__(self):
     super(MessageVMExit, self).__init__()
     self.messageType = Message.VMExit 
+  def format(self):
+    return "%s VMExit" % (super(MessageVMExit, self).format())
 
 '''
 Output messages

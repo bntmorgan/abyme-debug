@@ -30,6 +30,7 @@ class DebugClient():
   def notifyMessage(self, message):
     # Adds here to the model and notifies the view of the changes
     self.gui.notifyMessage(message)
+    # TODO add the message into the model
 
 # Debug client main
 debugClient = DebugClient()
