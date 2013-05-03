@@ -7,6 +7,27 @@ import urwid
 from model.message import Message
 
 class Gui():
+  banner = "\n\
+ ____ __     __ ____                                                                                \n\
+/ ___|\ \   / // ___|                                                                               \n\
+\___ \ \ \ / /| |                                                                                   \n\
+ ___) | \ V / | |___                                                                                \n\
+|____/   \_/   \____|                                                                               \n\
+                                                                                                    \n\
+                                                                                                    \n\
+__     __ ___  ____  _____  _   _    _     _        __  __     _     ____  _   _  ___  _   _  _____ \n\
+\ \   / /|_ _||  _ \|_   _|| | | |  / \   | |      |  \/  |   / \   / ___|| | | ||_ _|| \ | || ____|\n\
+ \ \ / /  | | | |_) | | |  | | | | / _ \  | |      | |\/| |  / _ \ | |    | |_| | | | |  \| ||  _|  \n\
+  \ V /   | | |  _ <  | |  | |_| |/ ___ \ | |___   | |  | | / ___ \| |___ |  _  | | | | |\  || |___ \n\
+   \_/   |___||_| \_\ |_|   \___//_/   \_\|_____|  |_|  |_|/_/   \_\\____||_| |_||___||_| \_||_____|\n\
+                                                                                                    \n\
+                                                                                                    \n\
+ ____   _____  ____   _   _   ____   ____  _____  ____                                              \n\
+|  _ \ | ____|| __ ) | | | | / ___| / ___|| ____||  _ \                                             \n\
+| | | ||  _|  |  _ \ | | | || |  _ | |  _ |  _|  | |_) |                                            \n\
+| |_| || |___ | |_) || |_| || |_| || |_| || |___ |  _ <                                             \n\
+|____/ |_____||____/  \___/  \____| \____||_____||_| \_\                                            \n\
+  "
   def __init__(self):
     # pointers
     self.network = None
@@ -36,7 +57,7 @@ class Gui():
     head = urwid.AttrMap(self.title, 'header')
     self.minibuf = urwid.Text(": ", wrap='clip')
     bottom = urwid.AttrMap(self.minibuf, 'header')
-    self.text = urwid.Text("", align='left')
+    self.text = urwid.Text(Gui.banner, align='left')
     self.execMode = urwid.Text("")
     self.setStep()
     self.mTF = urwid.Text("")
