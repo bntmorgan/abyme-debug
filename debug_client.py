@@ -21,8 +21,8 @@ class DebugClient():
     self.gui = None
     self.createComponents()
     # Running mode
-    self.step = 0 # Wait user at every VMExit
-    self.mTF = 0 # Monitor Trap Flag is activated
+    self.setStep() # Wait user at every VMExit
+    self.endMTF() # Monitor Trap Flag is activated
     # User interactions
     self.wait = 0 # We are waiting for a user entry
     self.run()
@@ -61,10 +61,19 @@ class DebugClient():
   def notifyUserInput(self, input):
     if input in ('q', 'Q'):
       raise urwid.ExitMainLoop()
-    if input == 's':
+    elif input == 'h':
+      self.usage()
+    elif input == 's':
       self.setStep()
-    if input == 'c':
+    elif input == 'c':
       self.endStep()
+    elif input == 't':
+      if self.mTF:
+        self.endMTF()
+      else:
+        self.setMTF()
+    else:
+      self.usage()
     # We have to notify the debug server that we have finished to wait for user entry
     # execution can continue
     if input in ('s', 'c') and self.wait == 1:
@@ -76,8 +85,18 @@ class DebugClient():
     self.sendContinue()
   def setStep(self):
     self.step = 1
+    self.gui.setStep()
   def endStep(self):
     self.step = 0
+    self.gui.endStep()
+  def setMTF(self):
+    self.mTF = 1
+    self.gui.setMTF()
+  def endMTF(self):
+    self.mTF = 0
+    self.gui.endMTF()
+  def usage(self):
+    self.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag")
 
 # Debug client main
 try:
