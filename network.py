@@ -24,7 +24,7 @@ class Network():
   # macSource = "\xff\xff\xff\xff\xff\xff"
   # macDest = "\xff\xff\xff\xff\xff\xff"
   etherType = 0x1234
-  interface = "wlan0"
+  interface = "eth0"
   def __init__(self):
     self.socket = None
     self.createSocket()
