@@ -19,12 +19,12 @@ class EthernetFrame():
     self.payload = packet[headerLength:]
 
 class Network():
-  macSource = "\xd4\xbe\xd9\x39\xc8\x46"
-  macDest = "\xd4\xbe\xd9\x39\xc8\x46"
-  # macSource = "\xff\xff\xff\xff\xff\xff"
-  # macDest = "\xff\xff\xff\xff\xff\xff"
-  etherType = 0x1234
-  interface = "eth0"
+  # macSource = "\xd4\xbe\xd9\x39\xc8\x46"
+  # macDest = "\xd4\xbe\xd9\x39\xc8\x46"
+  macSource = "\xff\xff\xff\xff\xff\xff"
+  macDest = "\xff\xff\xff\xff\xff\xff"
+  etherType = 0xb00b
+  interface = "eth1"
   def __init__(self):
     self.socket = None
     self.createSocket()
