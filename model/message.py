@@ -28,7 +28,7 @@ class Message(object):
   def __init__(self):
     self.messageType = Message.Message
   def unPack(self):
-    t = unpack('!B', self.frame.payload[0])
+    t = unpack('B', self.frame.payload[0])
     self.messageType = t[0]
   def pack(self):
     return pack('B', self.messageType)
@@ -84,13 +84,14 @@ class MessageVMExit(MessageIn):
   def format(self):
     return "%s VMExit" % (super(MessageVMExit, self).format())
   def unPack(self):
-    t = unpack('!BL', self.frame.payload[:5])
+    t = unpack('B', self.frame.payload[0])
     self.messageType = t[0]
-    self.exitReason = t[1]
+    t = unpack('I', self.frame.payload[1:5])
+    self.exitReason = t[0]
   def pack(self):
-    return pack('BL', self.messageType, self.exitReason)
+    return pack('BI', self.messageType, self.exitReason)
   def formatFull(self):
-    return super(MessageVMExit, self).formatFull() + "\nexit reason : %d" % (self.exitReason)
+    return super(MessageVMExit, self).formatFull() + "\nexit reason : 0x%x" % (self.exitReason)
 
 '''
 Output messages
