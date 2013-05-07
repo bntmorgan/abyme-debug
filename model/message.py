@@ -91,7 +91,7 @@ class MessageVMExit(MessageIn):
   def pack(self):
     return pack('BI', self.messageType, self.exitReason)
   def formatFull(self):
-    return super(MessageVMExit, self).formatFull() + "\nexit reason : 0x%x" % (self.exitReason)
+    return super(MessageVMExit, self).formatFull() + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
 
 '''
 Output messages
