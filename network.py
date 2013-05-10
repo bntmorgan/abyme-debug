@@ -50,11 +50,9 @@ class Network():
     return 0
   def send(self, message):
     payload = message.pack()
-    checksum = "\x1a\x2b\x3c\x4d"
     frame = self.macDest + self.macSource + pack('!H', self.ethertype) + payload
-    checksum = binascii.crc32(frame)
     frame = self.padding(frame)
-    self.socket.send(frame + pack('l', checksum))
+    self.socket.send(frame)
   def padding(self, frame):
     minlen = 14 + 42 # size of head plus minimum payload
     l = len(frame)
