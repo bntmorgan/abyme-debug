@@ -19,20 +19,20 @@ class EthernetFrame():
     self.payload = packet[headerLength:]
 
 class Network():
-  # macSource = "\xd4\xbe\xd9\x39\xc8\x46"
-  # macDest = "\xd4\xbe\xd9\x39\xc8\x46"
-  macSource = "\xff\xff\xff\xff\xff\xff"
-  macDest = "\xff\xff\xff\xff\xff\xff"
   def __init__(self):
     self.socket = None
     self.debugClient = None
     self.ethertype = None
+    self.macSource = None
+    self.macDest = None
   def __del__(self):
     if (self.socket != None):
       self.socket.close()
   def createSocket(self):
     # Get the ethertype from configuration
-    self.ethertype = self.debugClient.config['ETHERTYPE']
+    self.ethertype = int(self.debugClient.config['ETHERTYPE'], 16)
+    self.macSource = self.debugClient.config['MAC_SOURCE']
+    self.macDest = self.debugClient.config['MAC_DEST']
     try:
       self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
       self.socket.bind((self.debugClient.config['IF'], 0))
@@ -51,7 +51,7 @@ class Network():
   def send(self, message):
     payload = message.pack()
     checksum = "\x1a\x2b\x3c\x4d"
-    frame = Network.macDest + Network.macSource + pack('!H', self.ethertype) + payload
+    frame = self.macDest + self.macSource + pack('!H', self.ethertype) + payload
     checksum = binascii.crc32(frame)
     frame = self.padding(frame)
     self.socket.send(frame + pack('l', checksum))

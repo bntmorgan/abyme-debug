@@ -5,7 +5,7 @@ data   network
 menu   network
 title  Network interface configuration
 desc   network, change network settings
-data   network_interface, ethertype
+data   network_interface, ethertype, mac_source, mac_dest
 
 input  network_interface
 title  enter the network device
@@ -16,3 +16,13 @@ input  ethertype
 title  enter the ethertype
 desc   ethertype, ethertype
 data   ETHERTYPE
+
+input  mac_source
+title  enter the source mac address in big endian
+desc   mac, source
+data   MAC_SOURCE
+
+input  mac_dest
+title  enter the destination mac address in big endian
+desc   mac, dest
+data   MAC_DEST
