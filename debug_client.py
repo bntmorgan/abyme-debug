@@ -9,6 +9,7 @@ from network import *
 from view.gui import Gui
 from model.message import *
 from server_state_running import ServerStateRunning
+from config.config import Config
 
 class BadReply(BaseException):
   def __init__(self, value):
@@ -17,15 +18,12 @@ class BadReply(BaseException):
     return "Unexpected reply message type : %d " % (self.value)
 
 class DebugClient():
-  def __init__(self):
+  def __init__(self, config):
+    # Config
+    self.config = config
+    # Pointers
     self.network = None
     self.gui = None
-    self.createComponents()
-    # Running mode
-    self.setStep() # Wait user at every VMExit
-    self.endMTF() # Monitor Trap Flag is activated
-    # Server state machine : We start with the server running
-    self.serverState = ServerStateRunning(self)
   def createComponents(self):
     # Create all the components
     self.messages = Messages()
@@ -35,7 +33,15 @@ class DebugClient():
     self.gui.network = self.network
     self.gui.debugClient = self
     self.network.debugClient = self
+    # Running mode
+    self.setStep() # Wait user at every VMExit
+    self.endMTF() # Monitor Trap Flag is activated
+    # Server state machine : We start with the server running
+    self.serverState = ServerStateRunning(self)
+    # create the socket
+    self.network.createSocket()
   def run(self):
+    self.createComponents()
     self.gui.run()
   def notifyMessage(self, message):
     self.serverState.notifyMessage(message)
@@ -63,8 +69,8 @@ class DebugClient():
     self.gui.endMTF()
 
 # Debug client main
-try:
-  debugClient = DebugClient()
+try: 
+  debugClient = DebugClient(Config('config/debug_client.config'))
   debugClient.run()
 except BadReply, msg:
   print("%s\n" % (msg))

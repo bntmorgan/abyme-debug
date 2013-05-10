@@ -1,0 +1,2 @@
+IF=eth0
+ETHERTYPE=0xb00b

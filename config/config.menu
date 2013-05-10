@@ -1,0 +1,18 @@
+menu   main
+title  Tinyvisor
+data   network
+
+menu   network
+title  Network interface configuration
+desc   network, change network settings
+data   network_interface, ethertype
+
+input  network_interface
+title  enter the network device
+desc   interface, change the network device
+data   IF
+
+input  ethertype
+title  enter the ethertype
+desc   ethertype, ethertype
+data   ETHERTYPE

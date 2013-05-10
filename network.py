@@ -23,19 +23,19 @@ class Network():
   # macDest = "\xd4\xbe\xd9\x39\xc8\x46"
   macSource = "\xff\xff\xff\xff\xff\xff"
   macDest = "\xff\xff\xff\xff\xff\xff"
-  etherType = 0xb00b
-  interface = "eth1"
   def __init__(self):
     self.socket = None
-    self.createSocket()
     self.debugClient = None
+    self.ethertype = None
   def __del__(self):
     if (self.socket != None):
       self.socket.close()
   def createSocket(self):
+    # Get the ethertype from configuration
+    self.ethertype = self.debugClient.config['ETHERTYPE']
     try:
       self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
-      self.socket.bind((Network.interface, 0))
+      self.socket.bind((self.debugClient.config['IF'], 0))
     except socket.error , msg:
       print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
       sys.exit()
@@ -44,14 +44,14 @@ class Network():
     # Create ethernet fream object filter protocol
     packet = packet[0]
     frame = EthernetFrame(packet)
-    if (frame.protocol == Network.etherType):
+    if (frame.protocol == self.ethertype):
       self.debugClient.notifyMessage(Message.createMessage(frame))
       return 1
     return 0
   def send(self, message):
     payload = message.pack()
     checksum = "\x1a\x2b\x3c\x4d"
-    frame = Network.macDest + Network.macSource + pack('!H', Network.etherType) + payload
+    frame = Network.macDest + Network.macSource + pack('!H', self.ethertype) + payload
     checksum = binascii.crc32(frame)
     frame = self.padding(frame)
     self.socket.send(frame + pack('l', checksum))
