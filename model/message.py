@@ -27,11 +27,13 @@ class Message(object):
   ) = range(4)
   def __init__(self):
     self.messageType = Message.Message
+    self.core = 0
   def unPack(self):
-    t = unpack('B', self.frame.payload[0])
+    t = unpack('BB', self.frame.payload[0:1])
     self.messageType = t[0]
+    self.core = t[1]
   def pack(self):
-    return pack('B', self.messageType)
+    return pack('BB', self.messageType, self.core)
   @staticmethod
   def createMessage(frame):
     # get the type of the message
@@ -105,6 +107,11 @@ class MessageExecContinue(MessageOut):
   def __init__(self):
     super(MessageExecContinue, self).__init__()
     self.messageType = Message.ExecContinue
+
+class MessageExecStep(MessageOut):
+  def __init__(self):
+    super(MessageExecContinue, self).__init__()
+    self.messageType = Message.ExecStep
 
 class MessageExecStep(MessageOut):
   def __init__(self):
