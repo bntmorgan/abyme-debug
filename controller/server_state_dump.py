@@ -12,17 +12,16 @@ class ServerStateDump(ServerState):
     self.address = 0
     self.length = 128
   def addInput(self):
-    self.address = urwid.Edit(u"What? ", u"oh, nothing.")
+    self.address = urwid.Edit(u"Address length", u"")
     self.bottomBar.contents.append((self.address, self.bottomBar.options()))
     urwid.connect_signal(self.address, "change", self.addressChanged)
     self.bottomBar.focus_position = 2
   def removeInput(self):
-    urwid.disconnect_signal(self.address, "change", self.addressChanged)
     self.bottomBar.contents.pop()
   def notifyUserInput(self, input):
     if input == 'enter' and self.validate():
       self.removeInput()
-      self.changeState(ServerStateReply)
+      self.changeState(ServerStateDumpReply)
       self.sendMemoryRequest()
     else:
       self.usage()
@@ -31,7 +30,7 @@ class ServerStateDump(ServerState):
   def sendMemoryRequest(self):
     # XXX real send
     return 1
-  def validate(self, input):
+  def validate(self):
     # XXX real validation
     # Set the memory request values
     # self.address.get_edit_text()
