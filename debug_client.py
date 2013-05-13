@@ -62,6 +62,13 @@ class DebugClient():
   def endMTF(self):
     self.mTF = 0
     self.gui.endMTF()
+  def addMessage(self, message):
+    self.messages.append(message)
+    message.number = self.messages.length() - 1
+    # Adds here to the model and notifies the view of the changes
+    self.gui.notifyMessage(message)
+    self.gui.messageFocus(message.number, message)
+
 
 # Debug client main
 try: 

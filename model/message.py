@@ -24,8 +24,9 @@ class Message(object):
       VMExit,
       ExecContinue,
       ExecStep,
-      MemoryRequest,
-  ) = range(5)
+      MemoryRead,
+      MemoryData
+  ) = range(6)
   def __init__(self):
     self.messageType = Message.Message
     self.core = 0
@@ -48,6 +49,10 @@ class Message(object):
       m = MessageExecContinue()
     elif m.messageType == Message.ExecStep:
       m = MessageExecStep()
+    elif m.messageType == Message.MemoryRead:
+      m = MessageMemoryRead()
+    elif m.messageType == Message.MemoryData:
+      m = MessageMemoryData()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -91,6 +96,22 @@ class MessageVMExit(MessageIn):
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
 
+class MessageMemoryData(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.MemoryData
+    self.length = 0
+  def format(self):
+    return "%s MemoryData" % (MessageIn.format(self))
+  def unPack(self):
+    MessageIn.unPack(self)
+    t = unpack('q', self.frame.payload[2:10])
+    self.length = t[0]
+  def pack(self):
+    return MessageIn.pack(self) + pack('q', self.length)
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nlength : 0x%x" % (self.length)
+
 '''
 Output messages
 '''
@@ -109,10 +130,10 @@ class MessageExecStep(MessageOut):
     MessageOut.__init__(self)
     self.messageType = Message.ExecStep
 
-class MessageMemoryRequest(MessageOut):
+class MessageMemoryRead(MessageOut):
   def __init__(self, address, length):
     MessageOut.__init__(self)
-    self.messageType = Message.MemoryRequest
+    self.messageType = Message.MemoryRead
     self.address = address
     self.length = length
   def unPack(self):

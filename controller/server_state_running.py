@@ -18,8 +18,6 @@ class ServerStateRunning(ServerState):
     else:
       self.usage()
   def notifyMessage(self, message):
-    self.debugClient.messages.append(message)
-    message.number = self.debugClient.messages.length() - 1
     # Handle the message according to the type
     if message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
@@ -31,7 +29,6 @@ class ServerStateRunning(ServerState):
     else:
       raise BadReply(message.messageType)
     # Adds here to the model and notifies the view of the changes
-    self.debugClient.gui.notifyMessage(message)
-    self.debugClient.gui.messageFocus(message.number, message)
+    self.debugClient.addMessage(message)
   def usage(self):
     self.debugClient.gui.display("Usage()\ns : Step execution\n")
