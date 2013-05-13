@@ -1,6 +1,6 @@
 from struct import *
 
-import socket, sys
+import socket, sys, math
 
 '''
 Message collection
@@ -96,6 +96,7 @@ class MessageVMExit(MessageIn):
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
 
+FILTER=''.join([(len(repr(chr(x)))==3) and chr(x) or '.' for x in range(256)])
 class MessageMemoryData(MessageIn):
   def __init__(self):
     MessageIn.__init__(self)
@@ -107,10 +108,28 @@ class MessageMemoryData(MessageIn):
     MessageIn.unPack(self)
     t = unpack('q', self.frame.payload[2:10])
     self.length = t[0]
+    self.data = self.frame.payload[10:10 + self.length] 
   def pack(self):
     return MessageIn.pack(self) + pack('q', self.length)
   def formatFull(self):
-    return MessageIn.formatFull(self) + "\nlength : 0x%x" % (self.length)
+    return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length, self.dumpAll())
+  def dumpAll(self):
+    result = ''
+    cycles = math.ceil(len(self.data) / 16)
+    s = self.data
+    for i in range(cycles):
+      self.dump(s, 16)
+      s = s[16:]
+    return result
+  def dump(self, src, length):
+    N=0; result=''
+    while src:
+     s,src = src[:length],src[length:]
+     hexa = ' '.join(["%02X"%ord(x) for x in s])
+     s = s.translate(FILTER)
+     result += "%04X   %-*s   %s\n" % (N, length*3, hexa, s)
+     N+=length
+    return result
 
 '''
 Output messages
