@@ -24,7 +24,8 @@ class Message(object):
       VMExit,
       ExecContinue,
       ExecStep,
-  ) = range(4)
+      MemoryRequest,
+  ) = range(5)
   def __init__(self):
     self.messageType = Message.Message
     self.core = 0
@@ -107,3 +108,17 @@ class MessageExecStep(MessageOut):
   def __init__(self):
     MessageOut.__init__(self)
     self.messageType = Message.ExecStep
+
+class MessageMemoryRequest(MessageOut):
+  def __init__(self, address, length):
+    MessageOut.__init__(self)
+    self.messageType = Message.MemoryRequest
+    self.address = address
+    self.length = length
+  def unPack(self):
+    MessageOut.unPack(self)
+    t = unpack('qq', self.frame.payload[2:18])
+    self.address = t[0]
+    self.length = t[0]
+  def pack(self):
+    return MessageOut.pack(self) + pack('qq', self.address, self.length)

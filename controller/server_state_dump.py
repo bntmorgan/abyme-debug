@@ -2,6 +2,7 @@ import urwid
 
 from controller.server_state import ServerState, BadReply
 import controller.server_state_waiting
+from model.message import *
 
 class ServerStateDump(ServerState):
   def __init__(self, debugClient):
@@ -26,14 +27,17 @@ class ServerStateDump(ServerState):
     else:
       self.usage()
   def addressChanged(self, widget, text):
-    self.debugClient.gui.display(text)
+    self.debugClient.gui.display('Typed : %s' % (text))
   def sendMemoryRequest(self):
-    # XXX real send
-    return 1
+    m = MessageMemoryRequest(self.address, self.length)
+    self.network.send(m)
   def validate(self):
-    # XXX real validation
-    # Set the memory request values
-    # self.address.get_edit_text()
+    t = self.address.get_edit_text()
+    t = t.rsplit(' ')
+    if len(t) != 2:
+      return 0
+    self.address = int(t[0], 0)
+    self.length = int(t[1], 0)
     return 1
   def notifyMessage(self, message):
     raise BadReply(-1)
