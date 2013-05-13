@@ -7,14 +7,16 @@ import time
 
 from network import Network
 from model.message import *
+from config.config import Config
 
 class DebugClient():
-  def __init__(self):
+  def __init__(self, config):
+    self.config = config
     self.network = Network()
     self.network.debugClient = self
     self.wait = 1
-    self.runTest()
   def runTest(self):
+    self.network.createSocket()
     m = MessageVMExit()
     m.exitReason = 30
     while(1):
@@ -28,4 +30,5 @@ class DebugClient():
     print("Message received")
     print("Type %d" % (message.messageType))
 
-dc = DebugClient()
+debugClient = DebugClient(Config('config/debug_client.config'))
+debugClient.runTest()
