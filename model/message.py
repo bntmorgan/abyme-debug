@@ -58,7 +58,7 @@ Input messages
 
 class MessageIn(Message):
   def __init__(self):
-    super(MessageIn, self).__init__()
+    Message.__init__(self)
     # GUI
     self.number = 0
   @staticmethod
@@ -76,19 +76,19 @@ class MessageIn(Message):
 
 class MessageVMExit(MessageIn):
   def __init__(self):
-    super(MessageVMExit, self).__init__()
+    MessageIn.__init__(self)
     self.messageType = Message.VMExit 
     self.exitReason = 0xff
   def format(self):
-    return "%s VMExit" % (super(MessageVMExit, self).format())
+    return "%s VMExit" % (MessageIn.format(self))
   def unPack(self):
-    super(MessageVMExit, self).unPack()
+    MessageIn.unPack(self)
     t = unpack('I', self.frame.payload[2:6])
     self.exitReason = t[0]
   def pack(self):
-    return super(MessageVMExit, self).pack() + pack('I', self.exitReason)
+    return MessageIn.pack(self) + pack('I', self.exitReason)
   def formatFull(self):
-    return super(MessageVMExit, self).formatFull() + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
+    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
 
 '''
 Output messages
@@ -96,19 +96,14 @@ Output messages
 
 class MessageOut(Message):
   def __init__(self):
-    super(MessageOut, self).__init__()
+    Message.__init__(self)
 
 class MessageExecContinue(MessageOut):
   def __init__(self):
-    super(MessageExecContinue, self).__init__()
+    MessageOut.__init__(self)
     self.messageType = Message.ExecContinue
 
 class MessageExecStep(MessageOut):
   def __init__(self):
-    super(MessageExecContinue, self).__init__()
-    self.messageType = Message.ExecStep
-
-class MessageExecStep(MessageOut):
-  def __init__(self):
-    super(MessageExecContinue, self).__init__()
+    MessageOut.__init__(self)
     self.messageType = Message.ExecStep

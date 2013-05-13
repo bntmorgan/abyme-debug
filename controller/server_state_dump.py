@@ -33,8 +33,8 @@ class ServerStateDump(ServerState):
     return 1
   def validate(self, input):
     # XXX real validation
-    # Set the memory request values
-    # self.address.get_edit_text()
+    # Set the memory request values
+    # self.address.get_edit_text()
     return 1
   def notifyMessage(self, message):
     raise BadReply(-1)
@@ -47,7 +47,7 @@ class ServerStateDumpReply(ServerState):
   def notifyUserInput(self, input):
     self.usage()
   def notifyMessage(self, message):
-    # format the resullllts
+    # format the resullllts
     self.debugClient.gui.display("Memory message received")
     self.changeState(controller.server_state_waiting.ServerStateWaiting)
   def usage(self):
