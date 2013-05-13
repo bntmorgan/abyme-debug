@@ -28,11 +28,19 @@ class Network():
   def __del__(self):
     if (self.socket != None):
       self.socket.close()
+  @staticmethod
+  def macStrToBin(mac):
+    m = ''
+    t = mac.rsplit(':')
+    for b in t:
+      m = '%c' % (int('0x' + b, 16)) + m
+      print('%s' % (m))
+    return m
   def createSocket(self):
     # Get the ethertype from configuration
     self.ethertype = int(self.debugClient.config['ETHERTYPE'], 16)
-    self.macSource = self.debugClient.config['MAC_SOURCE']
-    self.macDest = self.debugClient.config['MAC_DEST']
+    self.macSource = Network.macStrToBin(self.debugClient.config['MAC_SOURCE'])
+    self.macDest = Network.macStrToBin(self.debugClient.config['MAC_DEST'])
     try:
       self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
       self.socket.bind((self.debugClient.config['IF'], 0))
