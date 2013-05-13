@@ -1,6 +1,8 @@
 import urwid
 
-from server_state import ServerState
+from controller.server_state import *
+import controller.server_state_waiting
+
 from model.message import *
 
 class ServerStateRunning(ServerState):
@@ -23,13 +25,13 @@ class ServerStateRunning(ServerState):
       # if we are not in step mode we directly continue the execution
       if self.debugClient.step:
         # Server is now waiting
-        self.changeState(ServerStateWaiting)
+        self.changeState(controller.server_state_waiting.ServerStateWaiting)
       else:
         self.debugClient.sendContinue()
     else:
       raise BadReply(message.messageType)
     # Adds here to the model and notifies the view of the changes
     self.debugClient.gui.notifyMessage(message)
-    self.debugClient.messageFocus(message.number, message)
+    self.debugClient.gui.messageFocus(message.number, message)
   def usage(self):
     self.debugClient.gui.display("Usage()\ns : Step execution\n")

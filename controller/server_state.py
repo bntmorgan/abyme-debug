@@ -9,3 +9,9 @@ class ServerState(object):
     raise NotImplementedError("Subclasses should implement this!")
   def changeState(self, serverStateClass):
     self.debugClient.serverState = serverStateClass(self.debugClient)
+
+class BadReply(BaseException):
+  def __init__(self, value):
+    self.value = value
+  def __str__(self):
+    return "Unexpected reply message type : %d " % (self.value)

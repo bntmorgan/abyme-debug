@@ -24,9 +24,11 @@ class DebugClient():
       self.network.send(m) 
       print("sent\n")
       while(self.wait):
-        self.wait = not(self.network.receive())
+        self.network.receive()
       time.sleep(2)
   def notifyMessage(self, message):
+    if isinstance(message, MessageExecContinue):
+      self.wait = 0
     print("Message received")
     print("Type %d" % (message.messageType))
 

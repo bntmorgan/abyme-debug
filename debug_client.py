@@ -8,14 +8,9 @@ import socket, sys
 from network import *
 from view.gui import Gui
 from model.message import *
-from server_state_running import ServerStateRunning
+from controller.server_state import BadReply
+from controller.server_state_running import ServerStateRunning
 from config.config import Config
-
-class BadReply(BaseException):
-  def __init__(self, value):
-    self.value = value
-  def __str__(self):
-    return "Unexpected reply message type : %d " % (self.value)
 
 class DebugClient():
   def __init__(self, config):

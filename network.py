@@ -33,8 +33,7 @@ class Network():
     m = ''
     t = mac.rsplit(':')
     for b in t:
-      m = '%c' % (int('0x' + b, 16)) + m
-      print('%s' % (m))
+      m = '%c' % (int(b, 16)) + m
     return m
   def createSocket(self):
     # Get the ethertype from configuration
