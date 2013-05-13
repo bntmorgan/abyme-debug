@@ -27,7 +27,7 @@ class ServerStateWaiting(ServerState):
         self.debugClient.setMTF()
     else:
       self.usage()
-  def notifyMessage(self):
+  def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
     self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag")

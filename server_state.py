@@ -3,7 +3,7 @@ class ServerState(object):
     self.debugClient = None
   def notifyUserInput(self, input):
     raise NotImplementedError("Subclasses should implement this!")
-  def notifyMessage(self):
+  def notifyMessage(self, message):
     raise NotImplementedError("Subclasses should implement this!")
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")

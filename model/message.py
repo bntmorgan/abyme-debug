@@ -29,7 +29,7 @@ class Message(object):
     self.messageType = Message.Message
     self.core = 0
   def unPack(self):
-    t = unpack('BB', self.frame.payload[0:1])
+    t = unpack('BB', self.frame.payload[0:2])
     self.messageType = t[0]
     self.core = t[1]
   def pack(self):
@@ -82,7 +82,7 @@ class MessageVMExit(MessageIn):
   def format(self):
     return "%s VMExit" % (super(MessageVMExit, self).format())
   def unPack(self):
-    super(MessageVMExit, self).unpack()
+    super(MessageVMExit, self).unPack()
     t = unpack('I', self.frame.payload[2:6])
     self.exitReason = t[0]
   def pack(self):

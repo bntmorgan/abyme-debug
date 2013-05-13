@@ -1,6 +1,7 @@
 import urwid
 
 from server_state import ServerState
+from model.message import *
 
 class ServerStateRunning(ServerState):
   def __init__(self, debugClient):
@@ -14,13 +15,13 @@ class ServerStateRunning(ServerState):
       self.debugClient.setStep()
     else:
       self.usage()
-  def notifyMessage(self):
+  def notifyMessage(self, message):
     self.debugClient.messages.append(message)
     message.number = self.debugClient.messages.length() - 1
     # Handle the message according to the type
     if message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
-      if self.step:
+      if self.debugClient.step:
         # Server is now waiting
         self.changeState(ServerStateWaiting)
       else:
