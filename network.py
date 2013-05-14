@@ -12,8 +12,8 @@ class EthernetFrame():
     eth = unpack('!6s6sH', header)
     protocol = eth[2]
     # Ethernet
-    self.macSource = packet[0:6]
-    self.macDest = packet[6:12]
+    self.macDest = packet[0:6]
+    self.macSource = packet[6:12]
     self.protocol = protocol
     self.headerLength = headerLength
     self.payload = packet[headerLength:]

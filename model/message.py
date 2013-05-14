@@ -55,6 +55,10 @@ class Message(object):
       m = MessageMemoryRead()
     elif m.messageType == Message.MemoryData:
       m = MessageMemoryData()
+    elif m.messageType == Message.MemoryWrite:
+      m = MessageMemoryWrite()
+    elif m.messageType == Message.MemoryWriteCommit:
+      m = MessageMemoryWriteCommit()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -121,24 +125,28 @@ class MessageMemoryData(MessageIn):
     src = self.data
     result=''
     while src:
-     s,src = src[:length], src[length:]
-     hexa = ' '.join(["%02X" % ord(x) for x in s])
-     s = s.translate(FILTER)
-     result += "%016X   %-*s   %s\n" % (n, length * 3, hexa, s)
-     n += length
+      s,src = src[:length], src[length:]
+      hexa = ' '.join(["%02X" % ord(x) for x in s])
+      s = s.translate(FILTER)
+      result += "%016X   %-*s   %s\n" % (n, length * 3, hexa, s)
+      n += length
     return result
 
 class MessageMemoryWriteCommit(MessageIn):
-  def __init__(self, ok):
-    MessageOut.__init__(self)
+  def __init__(self, ok = 0):
+    MessageIn.__init__(self)
     self.messageType = Message.MemoryWriteCommit
     self.ok = ok
   def unPack(self):
-    MessageOut.unPack(self)
-    t = unpack('B', self.frame.payload[0])
+    MessageIn.unPack(self)
+    t = unpack('B', self.frame.payload[2])
     self.ok = t[0]
   def pack(self):
-    return MessageOut.pack(self) + pack('B', self.ok)
+    return MessageIn.pack(self) + pack('B', self.ok)
+  def format(self):
+    return "%s WriteCommit" % (MessageIn.format(self))
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nok : %d" % (self.ok)
 
 '''
 Output messages
@@ -159,7 +167,7 @@ class MessageExecStep(MessageOut):
     self.messageType = Message.ExecStep
 
 class MessageMemoryRead(MessageOut):
-  def __init__(self, address, length):
+  def __init__(self, address = 0, length = 0):
     MessageOut.__init__(self)
     self.messageType = Message.MemoryRead
     self.address = address
@@ -173,7 +181,7 @@ class MessageMemoryRead(MessageOut):
     return MessageOut.pack(self) + pack('qq', self.address, self.length)
 
 class MessageMemoryWrite(MessageOut):
-  def __init__(self, address, data):
+  def __init__(self, address = 0, data = ""):
     MessageOut.__init__(self)
     self.messageType = Message.MemoryWrite
     self.address = address
