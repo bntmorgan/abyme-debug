@@ -4,6 +4,7 @@ from controller.server_state import ServerState, BadReply
 import controller.server_state_running
 import controller.server_state_dump
 import controller.server_state_write
+import controller.server_state_set_line
 
 class ServerStateWaiting(ServerState):
   def __init__(self, debugClient):
@@ -36,6 +37,8 @@ class ServerStateWaiting(ServerState):
       self.changeState(controller.server_state_dump.ServerStateDump)
     elif input == 'w':
       self.changeState(controller.server_state_write.ServerStateWrite)
+    elif input == ':':
+      self.changeState(controller.server_state_set_line.ServerStateSetLine)
     else:
       self.usage()
   def notifyMessage(self, message):

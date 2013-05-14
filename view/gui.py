@@ -43,7 +43,7 @@ class Gui():
     # graphical components
     self.listContent = None
     self.title = None
-    self.minibuffer = None
+    self.minibuf = None
     self.listBox = None
     self.head = None
     self.top = None
@@ -101,7 +101,8 @@ class Gui():
     self.setMinibuf("%d" % (self.listBox.focus_position))
   def messageFocus(self, number):
     # Refresh focus
-    self.listBox.focus_position = number
+    if len(self.debugClient.messages) > number and number >= 0:
+      self.listBox.focus_position = number
   def focusMinibuf(self):
     self.top.focus_position = 2
   def focusList(self):
