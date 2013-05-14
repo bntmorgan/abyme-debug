@@ -8,25 +8,33 @@ from model.message import Message
 
 class Gui():
   banner = """
- ____ __     __ ____                                                                                
-/ ___|\ \   / // ___|                                                                               
-\___ \ \ \ / /| |                                                                                   
- ___) | \ V / | |___                                                                                
-|____/   \_/   \____|                                                                               
-                                                                                                    
-                                                                                                    
-__     __ ___  ____  _____  _   _    _     _        __  __     _     ____  _   _  ___  _   _  _____ 
-\ \   / /|_ _||  _ \|_   _|| | | |  / \   | |      |  \/  |   / \   / ___|| | | ||_ _|| \ | || ____|
- \ \ / /  | | | |_) | | |  | | | | / _ \  | |      | |\/| |  / _ \ | |    | |_| | | | |  \| ||  _|  
-  \ V /   | | |  _ <  | |  | |_| |/ ___ \ | |___   | |  | | / ___ \| |___ |  _  | | | | |\  || |___ 
-   \_/   |___||_| \_\ |_|   \___//_/   \_\|_____|  |_|  |_|/_/   \_\\\\____||_| |_||___||_| \_||_____|
-                                                                                                    
-                                                                                                    
- ____   _____  ____   _   _   ____   ____  _____  ____                                              
-|  _ \ | ____|| __ ) | | | | / ___| / ___|| ____||  _ \                                             
-| | | ||  _|  |  _ \ | | | || |  _ | |  _ |  _|  | |_) |                                            
-| |_| || |___ | |_) || |_| || |_| || |_| || |___ |  _ <                                             
-|____/ |_____||____/  \___/  \____| \____||_____||_| \_\       
+                                                                ____                  
+  .--.--.                ,----..                              ,'  , `.                
+ /  /    '.       ,---. /   /   \\                ,---.     ,-+-,.' _ |                
+|  :  /`. /      /__./||   :     :              /__./|  ,-+-. ;   , ||                
+;  |  |--`  ,---.;  ; |.   |  ;. /         ,---.;  ; | ,--.'|'   |  ;|                
+|  :  ;_   /___/ \\  | |.   ; /--`         /___/ \\  | ||   |  ,', |  ':                
+ \\  \\    `.\\   ;  \\ ' |;   | ;            \\   ;  \\ ' ||   | /  | |  ||                
+  `----.   \\\\   \\  \\: ||   : |             \\   \\  \\: |'   | :  | :  |,                
+  __ \\  \\  | ;   \\  ' ..   | '___           ;   \\  ' .;   . |  ; |--'                 
+ /  /`--'  /  \\   \\   ''   ; : .'|           \\   \\   '|   : |  | ,                    
+'--'.     /    \\   `  ;'   | '/  :            \\   `  ;|   : '  |/                     
+  `--'---'      :   \\ ||   :    /              :   \\ |;   | |`-'                      
+                 '---"  \\   \\ .'                '---" |   ;/                          
+                         `---`                        '---'                           
+      ,---,            ,---,                                                          
+    ,---.'|          ,---.'|            ,--,                                  __  ,-. 
+    |   | :          |   | :          ,'_ /|  ,----._,.  ,----._,.          ,' ,'/ /| 
+    |   | |   ,---.  :   : :     .--. |  | : /   /  ' / /   /  ' /   ,---.  '  | |' | 
+  ,--.__| |  /     \\ :     |,-.,'_ /| :  . ||   :     ||   :     |  /     \\ |  |   ,' 
+ /   ,'   | /    /  ||   : '  ||  ' | |  . .|   | .\\  .|   | .\\  . /    /  |'  :  /   
+.   '  /  |.    ' / ||   |  / :|  | ' |  | |.   ; ';  |.   ; ';  |.    ' / ||  | '    
+'   ; |:  |'   ;   /|'   : |: |:  | : ;  ; |'   .   . |'   .   . |'   ;   /|;  : |    
+|   | '/  ''   |  / ||   | '/ :'  :  `--'   \\`---`-'| | `---`-'| |'   |  / ||  , ;    
+|   :    :||   :    ||   :    |:  ,      .-./.'__/\\_: | .'__/\\_: ||   :    | ---'     
+ \\   \\  /   \\   \\  / /    \\  /  `--`----'    |   :    : |   :    : \\   \\  /           
+  `----'     `----'  `-'----'                 \\   \\  /   \\   \\  /   `----'            
+                                               `--`-'     `--`-'                      
 """
   def __init__(self):
     # pointers
@@ -36,7 +44,7 @@ __     __ ___  ____  _____  _   _    _     _        __  __     _     ____  _   _
     self.listContent = None
     self.title = None
     self.minibuffer = None
-    self.listbox = None
+    self.listBox = None
     self.head = None
     self.top = None
     self.text = None
@@ -51,7 +59,7 @@ __     __ ___  ____  _____  _   _    _     _        __  __     _     ____  _   _
     self.initGraphicalComponents()
   def initGraphicalComponents(self):
     self.listContent = urwid.SimpleListWalker([])
-    self.listbox = urwid.ListBox(self.listContent)
+    self.listBox = urwid.ListBox(self.listContent)
     # List legend
     self.title = urwid.Text("#    N Length Source address    Dest address      Type", wrap='clip')
     head = urwid.AttrMap(self.title, 'header')
@@ -67,7 +75,7 @@ __     __ ___  ____  _____  _   _    _     _        __  __     _     ____  _   _
         (10, urwid.AttrMap(self.mTF, 'flags'))]
     self.bottomBar = urwid.Columns(widgetsColumns)
     widgetsPile = [
-        urwid.Frame(self.listbox, head, bottom),
+        urwid.Frame(self.listBox, head, bottom),
         urwid.AttrMap(urwid.Filler(self.text, valign = 'top'), 'text'),
         (1, urwid.Filler(self.bottomBar))]
     self.top = urwid.Pile(widgetsPile);
@@ -89,10 +97,20 @@ __     __ ___  ____  _____  _   _    _     _        __  __     _     ____  _   _
     self.listContent.append(urwid.AttrMap(t, None, 'reveal focus'))
   def messageFocus(self, number, message):
     # Refresh focus
-    self.listbox.set_focus(number)
+    self.listBox.focus_position = number
     # Refresh text content
     self.display(message.formatFull())
     self.setMinibuf("%s" % (number))
+  def focusMinibuf(self):
+    self.top.focus_position = 2
+  def focusList(self):
+    self.top.focus_position = 0
+  def messageFocusInc(self):
+    self.focusList()
+    self.listBox.focus_position += 1
+  def messageFocusDec(self):
+    self.focusList()
+    self.listBox.focus_position -= 1
   def exitOnCr(self,  input):
     self.debugClient.notifyUserInput(input)
   def filterInput(self, input, raw):

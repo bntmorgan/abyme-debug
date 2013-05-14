@@ -29,8 +29,10 @@ class ServerStateMinibuf(ServerState):
     self.bottomBar.contents.append((self.input, self.bottomBar.options()))
     urwid.connect_signal(self.input, "change", self.changed)
     self.bottomBar.focus_position = 2
+    self.debugClient.gui.focusMinibuf()
   def removeInput(self):
     self.bottomBar.contents.pop()
+    self.debugClient.gui.focusList()
   def onSubmit(self):
     raise NotImplementedError("Subclasses should implement this!")
   def notifyUserInput(self, input):

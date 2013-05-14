@@ -18,6 +18,10 @@ class ServerStateWaiting(ServerState):
       self.debugClient.sendContinue()
       # server is now running
       self.changeState(controller.server_state_running.ServerStateRunning)
+    elif input == 'up':
+      self.debugClient.gui.messageFocusDec()
+    elif input == 'down':
+      self.debugClient.gui.messageFocusInc()
     elif input == 'c':
       self.debugClient.endStep()
       self.debugClient.sendContinue()
