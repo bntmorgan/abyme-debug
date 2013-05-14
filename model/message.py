@@ -39,6 +39,18 @@ class Message(object):
   def pack(self):
     return pack('BB', self.messageType, self.core)
   @staticmethod
+  def ethAddr (a):
+    b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]), ord(a[3]), ord(a[4]), ord(a[5]))
+    return b
+  def format(self):
+    l = "%04d B" % (len(self.frame.payload))
+    # new length addrSource addrDest type
+    return "%04d %d %s %s %s" % (self.number, self.core, l, Message.ethAddr(self.frame.macSource), Message.ethAddr(self.frame.macDest))
+  def formatFull(self):
+    l = "%04d B" % (len(self.frame.payload))
+    # new length addrSource addrDest type
+    return "number : %04d\ncore : %d\nlength : %s\nsrc address : %s\ndest address : %s" % (self.number, self.core, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
+  @staticmethod
   def createMessage(frame):
     # get the type of the message
     m = MessageIn();
@@ -73,18 +85,6 @@ class MessageIn(Message):
     Message.__init__(self)
     # GUI
     self.number = 0
-  @staticmethod
-  def ethAddr (a):
-    b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]), ord(a[3]), ord(a[4]), ord(a[5]))
-    return b
-  def format(self):
-    l = "%04d B" % (len(self.frame.payload))
-    # new length addrSource addrDest type
-    return "%04d %d %s %s %s" % (self.number, self.core, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
-  def formatFull(self):
-    l = "%04d B" % (len(self.frame.payload))
-    # new length addrSource addrDest type
-    return "number : %04d\ncore : %d\nlength : %s\nsrc address : %s\ndest address : %s" % (self.number, self.core, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
 
 class MessageVMExit(MessageIn):
   def __init__(self):
@@ -160,11 +160,15 @@ class MessageExecContinue(MessageOut):
   def __init__(self):
     MessageOut.__init__(self)
     self.messageType = Message.ExecContinue
+  def format(self):
+    return "%s ExecContinue" % (MessageOut.format(self))
 
 class MessageExecStep(MessageOut):
   def __init__(self):
     MessageOut.__init__(self)
     self.messageType = Message.ExecStep
+  def format(self):
+    return "%s ExecStep" % (MessageOut.format(self))
 
 class MessageMemoryRead(MessageOut):
   def __init__(self, address = 0, length = 0):
@@ -179,6 +183,8 @@ class MessageMemoryRead(MessageOut):
     self.length = t[1]
   def pack(self):
     return MessageOut.pack(self) + pack('qq', self.address, self.length)
+  def format(self):
+    return "%s MemoryRead" % (MessageOut.format(self))
 
 class MessageMemoryWrite(MessageOut):
   def __init__(self, address = 0, data = ""):
@@ -195,3 +201,5 @@ class MessageMemoryWrite(MessageOut):
     self.data = self.frame.payload[18:18 + self.length] 
   def pack(self):
     return MessageOut.pack(self) + pack('qq', self.address, self.length) + self.data
+  def format(self):
+    return "%s MemoryWrite" % (MessageOut.format(self))

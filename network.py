@@ -33,7 +33,7 @@ class Network():
     m = ''
     t = mac.rsplit(':')
     for b in t:
-      m = '%c' % (int(b, 16)) + m
+      m += '%c' % (int(b, 16))
     return m
   def createSocket(self):
     # Get the ethertype from configuration
@@ -57,9 +57,10 @@ class Network():
     return 0
   def send(self, message):
     payload = message.pack()
-    frame = self.macDest + self.macSource + pack('!H', self.ethertype) + payload
+    frame = pack('!6s6sH', self.macDest, self.macSource, self.ethertype) + payload
     frame = self.padding(frame)
     self.socket.send(frame)
+    message.frame = EthernetFrame(frame)
   def padding(self, frame):
     minlen = 14 + 42 # size of head plus minimum payload
     l = len(frame)

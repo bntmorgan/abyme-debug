@@ -43,6 +43,7 @@ class DebugClient():
   def sendContinue(self):
     m = MessageExecContinue()
     self.network.send(m)
+    self.addMessage(m)
   def notifyUserInput(self, input):
     self.serverState.notifyUserInput(input)
   def setWait(self):

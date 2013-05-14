@@ -18,11 +18,11 @@ desc   ethertype, ethertype
 data   ETHERTYPE
 
 input  mac_source
-title  enter the source mac address in big endian
+title  enter the source mac address
 desc   mac, source
 data   MAC_SOURCE
 
 input  mac_dest
-title  enter the destination mac address in big endian
+title  enter the destination mac address
 desc   mac, dest
 data   MAC_DEST

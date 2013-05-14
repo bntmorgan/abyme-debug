@@ -1,32 +1,37 @@
+import urwid
+
 from controller.server_state import ServerState, BadReply, ServerStateMinibuf
 import controller.server_state_waiting
 from model.message import *
 
-class ServerStateDump(ServerStateMinibuf):
+class ServerStateWrite(ServerStateMinibuf):
   def __init__(self, debugClient):
-    ServerStateMinibuf.__init__(self, debugClient, u"Address length : ")
+    ServerStateMinibuf.__init__(self, debugClient, u"Address data : ")
     # Memory request values
     self.address = 0
-    self.length = 128
+    self.data = 0
   def sendMemoryRequest(self):
-    m = MessageMemoryRead(self.address, self.length)
+    m = MessageMemoryWrite(self.address, self.data)
     self.debugClient.network.send(m)
     self.debugClient.addMessage(m)
   def onSubmit(self):
     self.sendMemoryRequest()
-    self.changeState(ServerStateDumpReply)
+    self.changeState(ServerStateWriteReply)
   def validate(self):
     t = self.input.get_edit_text()
     t = t.rsplit(' ')
     if len(t) != 2:
       return 0
     self.address = int(t[0], 0)
-    self.length = int(t[1], 0)
+    try:
+      self.data = t[1].decode('hex')
+    except:
+      return 0
     return 1
   def usage(self):
-    self.debugClient.gui.display("Usage()\n Type an address and size 0xffffffff 0x1000 and carriage return")
+    self.debugClient.gui.display("Usage()\n Type an address, some data to write 0xffffffff 0x1000 and carriage return")
 
-class ServerStateDumpReply(ServerState):
+class ServerStateWriteReply(ServerState):
   def __init__(self, debugClient):
     self.debugClient = debugClient
   def notifyUserInput(self, input):

@@ -15,6 +15,8 @@ class ServerStateRunning(ServerState):
       self.usage()
     elif input == 's':
       self.debugClient.setStep()
+    elif input == 'f':
+      self.changeState(controller.server_state_waiting.ServerStateWaiting)
     else:
       self.usage()
   def notifyMessage(self, message):
@@ -31,4 +33,4 @@ class ServerStateRunning(ServerState):
     # Adds here to the model and notifies the view of the changes
     self.debugClient.addMessage(message)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\n")
+    self.debugClient.gui.display("Usage()\ns : Step execution\nf : Force waiting state (if VMM already waiting)")
