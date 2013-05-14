@@ -3,17 +3,6 @@ from struct import *
 import socket, sys, math
 
 '''
-Message collection
-'''
-class Messages(object):
-  def __init__(self):
-    self.messages = [];
-  def append(self, message):
-    self.messages.append(message)
-  def length(self):
-    return len(self.messages)
-
-'''
 Message
 '''
 

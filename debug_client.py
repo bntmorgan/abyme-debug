@@ -21,7 +21,7 @@ class DebugClient():
     self.gui = None
   def createComponents(self):
     # Create all the components
-    self.messages = Messages()
+    self.messages = []
     self.network = Network()
     self.gui = Gui()
     # Share the pointers
@@ -65,10 +65,10 @@ class DebugClient():
     self.gui.endMTF()
   def addMessage(self, message):
     self.messages.append(message)
-    message.number = self.messages.length() - 1
+    message.number = len(self.messages) - 1
     # Adds here to the model and notifies the view of the changes
     self.gui.notifyMessage(message)
-    self.gui.messageFocus(message.number, message)
+    self.gui.messageFocus(message.number)
 
 
 # Debug client main

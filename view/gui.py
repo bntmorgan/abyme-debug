@@ -79,6 +79,7 @@ class Gui():
         urwid.AttrMap(urwid.Filler(self.text, valign = 'top'), 'text'),
         (1, urwid.Filler(self.bottomBar))]
     self.top = urwid.Pile(widgetsPile);
+    urwid.connect_signal(self.listContent, "modified", self.listBoxModified)
   def setTitle(self, title):
     self.title.set_text(title)
   def setMinibuf(self, minibuf):
@@ -95,22 +96,24 @@ class Gui():
     t = urwid.Text(message.format())
     # Add the message to the list
     self.listContent.append(urwid.AttrMap(t, None, 'reveal focus'))
-  def messageFocus(self, number, message):
+  def listBoxModified(self):
+    self.display(self.debugClient.messages[self.listBox.focus_position].formatFull())
+    self.setMinibuf("%d" % (self.listBox.focus_position))
+  def messageFocus(self, number):
     # Refresh focus
     self.listBox.focus_position = number
-    # Refresh text content
-    self.display(message.formatFull())
-    self.setMinibuf("%s" % (number))
   def focusMinibuf(self):
     self.top.focus_position = 2
   def focusList(self):
     self.top.focus_position = 0
   def messageFocusInc(self):
-    self.focusList()
-    self.listBox.focus_position += 1
+    if len(self.debugClient.messages) > 0 and self.listBox.focus_position < len(self.debugClient.messages) - 1:
+      self.focusList()
+      self.listBox.focus_position += 1
   def messageFocusDec(self):
-    self.focusList()
-    self.listBox.focus_position -= 1
+    if len(self.debugClient.messages) > 0 and self.listBox.focus_position > 0:
+      self.focusList()
+      self.listBox.focus_position -= 1
   def exitOnCr(self,  input):
     self.debugClient.notifyUserInput(input)
   def filterInput(self, input, raw):
