@@ -25,8 +25,10 @@ class Message(object):
       ExecContinue,
       ExecStep,
       MemoryRead,
-      MemoryData
-  ) = range(6)
+      MemoryData,
+      MemoryWrite,
+      MemoryWriteCommit
+  ) = range(8)
   def __init__(self):
     self.messageType = Message.Message
     self.core = 0
@@ -154,6 +156,22 @@ class MessageMemoryRead(MessageOut):
     MessageOut.unPack(self)
     t = unpack('qq', self.frame.payload[2:18])
     self.address = t[0]
-    self.length = t[0]
+    self.length = t[1]
   def pack(self):
     return MessageOut.pack(self) + pack('qq', self.address, self.length)
+
+class MessageMemoryWrite(MessageOut):
+  def __init__(self, address, data):
+    MessageOut.__init__(self)
+    self.messageType = Message.MemoryWrite
+    self.address = address
+    self.length = len(data)
+    self.data = data
+  def unPack(self):
+    MessageOut.unPack(self)
+    t = unpack('qq', self.frame.payload[2:18])
+    self.address = t[0]
+    self.length = t[1]
+    self.data = self.frame.payload[18:18 + self.length] 
+  def pack(self):
+    return MessageOut.pack(self) + pack('qq', self.address, self.length) + self.data
