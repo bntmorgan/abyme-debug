@@ -128,6 +128,18 @@ class MessageMemoryData(MessageIn):
      n += length
     return result
 
+class MessageMemoryWriteCommit(MessageIn):
+  def __init__(self, ok):
+    MessageOut.__init__(self)
+    self.messageType = Message.MemoryWriteCommit
+    self.ok = ok
+  def unPack(self):
+    MessageOut.unPack(self)
+    t = unpack('B', self.frame.payload[0])
+    self.ok = t[0]
+  def pack(self):
+    return MessageOut.pack(self) + pack('B', self.ok)
+
 '''
 Output messages
 '''
