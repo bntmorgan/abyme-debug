@@ -5,6 +5,8 @@ import controller.server_state_running
 import controller.server_state_dump
 import controller.server_state_write
 import controller.server_state_set_line
+import model.message
+from model.bin import Bin
 
 class ServerStateWaiting(ServerState):
   def __init__(self, debugClient):
@@ -37,6 +39,18 @@ class ServerStateWaiting(ServerState):
       self.changeState(controller.server_state_dump.ServerStateDump)
     elif input == 'w':
       self.changeState(controller.server_state_write.ServerStateWrite)
+    elif input == 'd':
+      if len(self.debugClient.messages) == 0:
+        return
+      m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
+      if isinstance(m, model.message.MessageMemoryData):
+        b = Bin(m.data, 0)
+        self.debugClient.gui.display(b.disasm())
+    elif input == 'p':
+      if len(self.debugClient.messages) == 0:
+        return
+      m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
+      self.debugClient.gui.display(m.formatFull())
     elif input == ':':
       self.changeState(controller.server_state_set_line.ServerStateSetLine)
     else:
@@ -44,4 +58,4 @@ class ServerStateWaiting(ServerState):
   def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory")
+    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data")
