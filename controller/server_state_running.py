@@ -21,7 +21,11 @@ class ServerStateRunning(ServerState):
       self.usage()
   def notifyMessage(self, message):
     # Handle the message according to the type
-    if message.messageType == Message.VMExit:
+    if message.messageType == Message.UnhandledVMExit:
+      self.debugClient.step = 1
+      # Server is now waiting
+      self.changeState(controller.server_state_waiting.ServerStateWaiting)
+    elif message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
       if self.debugClient.step:
         # Server is now waiting

@@ -91,7 +91,7 @@ Index
       rsi %016x rdi %016x
 Control Registers
       cr0 %016x cr1 %016x
-      cr3 %016x cr3 %016x
+      cr2 %016x cr3 %016x
       cr4 %016x
     """ % (
         self.rip, self.rax, self.rbx, self.rcx, self.rdx, self.r8, self.r9,

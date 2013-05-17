@@ -55,11 +55,11 @@ class ServerStateWaiting(ServerState):
       self.debugClient.gui.display(m.formatFull())
     elif input == ':':
       self.changeState(controller.server_state_set_line.ServerStateSetLine)
-    elif input == 'm':
+    elif input == 'R':
       self.changeState(controller.server_state_regs.ServerStateRegs)
     else:
       self.usage()
   def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\n m : Print the regs")
+    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\nR : Print the regs")

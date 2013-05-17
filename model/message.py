@@ -20,7 +20,8 @@ class Message(object):
       MemoryWriteCommit,
       CoreRegsRead,
       CoreRegsData,
-  ) = range(10)
+      UnhandledVMExit,
+  ) = range(11)
   def __init__(self):
     self.messageType = Message.Message
     self.coreNumber = 0
@@ -67,6 +68,8 @@ class Message(object):
       m = MessageCoreRegsRead()
     elif m.messageType == Message.CoreRegsData:
       m = MessageCoreRegsData()
+    elif m.messageType == Message.UnhandledVMExit:
+      m = MessageUnhandledVMExit()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -159,6 +162,13 @@ class MessageMemoryWriteCommit(MessageIn):
     return "%s WriteCommit" % (MessageIn.format(self))
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nok : %d" % (self.ok)
+
+class MessageUnhandledVMExit(MessageVMExit):
+  def __init__(self):
+    MessageVMExit.__init__(self)
+    self.messageType = Message.UnhandledVMExit
+  def format(self):
+    return "%s Unhandled VMExit" % (MessageIn.format(self))
 
 '''
 Output messages
