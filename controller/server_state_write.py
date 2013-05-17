@@ -37,6 +37,8 @@ class ServerStateWriteReply(ServerState):
   def notifyUserInput(self, input):
     self.usage()
   def notifyMessage(self, message):
+    if not isinstance(message, MessageMemoryWriteCommit):
+      raise BadReply
     self.debugClient.addMessage(message)
     self.changeState(controller.server_state_waiting.ServerStateWaiting)
   def usage(self):

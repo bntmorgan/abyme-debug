@@ -30,6 +30,12 @@ class CoreRegs(object):
     self.rdi = None
     # Instruction pointer
     self.rip = None
+    # Control registers
+    self.cr0 = None
+    self.cr1 = None
+    self.cr2 = None
+    self.cr3 = None
+    self.cr4 = None
   def unPack(self, data):
     t = unpack('QQQQQQQQQQQQ', data[0:96]) # 12 * 8
     self.rax = t[0]
@@ -59,48 +65,39 @@ class CoreRegs(object):
     self.rdi = t[1]
     t = unpack('Q', data[140:148]) # 140 + 8
     self.rip = t[0]
+    t = unpack('QQQQQ', data[148:188]) # 148 + 5 * 8
+    self.cr0 = t[0]
+    self.cr1 = t[1]
+    self.cr2 = t[2]
+    self.cr3 = t[3]
+    self.cr4 = t[4]
   def format(self):
     return """
 Instruction Pointer
-      rip %016X
-GPRs  rax %016X rbx %016X
-      rcx %016X rdx %016X
-      r8  %016X r9  %016X
-      r10 %016X r11 %016X
-      r12 %016X r13 %016X
-      r14 %016X r15 %016X
+      rip %016x
+GPRs  rax %016x rbx %016x
+      rcx %016x rdx %016x
+      r8  %016x r9  %016x
+      r10 %016x r11 %016x
+      r12 %016x r13 %016x
+      r14 %016x r15 %016x
 Segment 
       cs %04x ds %04x
       ss %04x es %04x
       fs %04x gs %04x
 Pointer
-      rbp %016X rsp %016X
+      rbp %016x rsp %016x
 Index
-      rsi %016X rdi %016X
+      rsi %016x rdi %016x
+Control Registers
+      cr0 %016x cr1 %016x
+      cr3 %016x cr3 %016x
+      cr4 %016x
     """ % (
-        self.rip,
-        self.rax,
-        self.rbx,
-        self.rcx,
-        self.rdx,
-        self.r8,
-        self.r9,
-        self.r10,
-        self.r11,
-        self.r12,
-        self.r13,
-        self.r14,
-        self.r15,
-        self.cs,
-        self.ds,
-        self.ss,
-        self.es,
-        self.fs,
-        self.gs,
-        self.rbp,
-        self.rsp,
-        self.rsi,
-        self.rdi
+        self.rip, self.rax, self.rbx, self.rcx, self.rdx, self.r8, self.r9,
+        self.r10, self.r11, self.r12, self.r13, self.r14, self.r15, self.cs,
+        self.ds, self.ss, self.es, self.fs, self.gs, self.rbp, self.rsp,
+        self.rsi, self.rdi, self.cr0, self.cr1, self.cr2, self.cr3, self.cr4,
       )
 
 class Core(object):

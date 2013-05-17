@@ -17,8 +17,10 @@ class Message(object):
       MemoryRead,
       MemoryData,
       MemoryWrite,
-      MemoryWriteCommit
-  ) = range(8)
+      MemoryWriteCommit,
+      CoreRegsRead,
+      CoreRegsData,
+  ) = range(10)
   def __init__(self):
     self.messageType = Message.Message
     self.coreNumber = 0
@@ -61,6 +63,10 @@ class Message(object):
       m = MessageMemoryWrite()
     elif m.messageType == Message.MemoryWriteCommit:
       m = MessageMemoryWriteCommit()
+    elif m.messageType == Message.CoreRegsRead:
+      m = MessageCoreRegsRead()
+    elif m.messageType == Message.CoreRegsData:
+      m = MessageCoreRegsData()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -81,7 +87,6 @@ class MessageVMExit(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.VMExit 
     self.exitReason = 0xff
-    self.core = Core()
   def format(self):
     return "%s VMExit" % (MessageIn.format(self))
   def unPack(self):
@@ -89,12 +94,25 @@ class MessageVMExit(MessageIn):
     MessageIn.unPack(self)
     t = unpack('I', self.frame.payload[2:6])
     self.exitReason = t[0]
-    # unpack core data
-    self.core.unPack(self.frame.payload[6:])
   def pack(self):
     return MessageIn.pack(self) + pack('I', self.exitReason)
   def formatFull(self):
-    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff) + self.core.format()
+    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
+
+class MessageCoreRegsData(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.CoreRegsData
+    self.core = Core()
+  def format(self):
+    return "%s CoreRegsData" % (MessageIn.format(self))
+  def unPack(self):
+    # unpack core data
+    self.core.unPack(self.frame.payload[2:])
+  def pack(self):
+    return MessageIn.pack(self)
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nCore regs :\n" + self.core.format()
 
 FILTER=''.join([(len(repr(chr(x))) == 3) and chr(x) or '.' for x in range(256)])
 class MessageMemoryData(MessageIn):
@@ -197,3 +215,10 @@ class MessageMemoryWrite(MessageOut):
     return MessageOut.pack(self) + pack('QQ', self.address, self.length) + self.data
   def format(self):
     return "%s MemoryWrite" % (MessageOut.format(self))
+
+class MessageCoreRegsRead(MessageOut):
+  def __init__(self):
+    MessageOut.__init__(self)
+    self.messageType = Message.CoreRegsRead
+  def format(self):
+    return "%s CoreRegsRead" % (MessageOut.format(self))

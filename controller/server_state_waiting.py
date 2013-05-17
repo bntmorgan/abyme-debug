@@ -5,6 +5,7 @@ import controller.server_state_running
 import controller.server_state_dump
 import controller.server_state_write
 import controller.server_state_set_line
+import controller.server_state_regs
 import model.message
 from model.bin import Bin
 
@@ -46,6 +47,7 @@ class ServerStateWaiting(ServerState):
       if isinstance(m, model.message.MessageMemoryData):
         b = Bin(m.data, 0)
         self.debugClient.gui.display(b.disasm())
+        b = None
     elif input == 'p':
       if len(self.debugClient.messages) == 0:
         return
@@ -53,9 +55,11 @@ class ServerStateWaiting(ServerState):
       self.debugClient.gui.display(m.formatFull())
     elif input == ':':
       self.changeState(controller.server_state_set_line.ServerStateSetLine)
+    elif input == 'm':
+      self.changeState(controller.server_state_regs.ServerStateRegs)
     else:
       self.usage()
   def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data")
+    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\n m : Print the regs")
