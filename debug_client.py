@@ -11,6 +11,7 @@ from model.message import *
 from controller.server_state import BadReply
 from controller.server_state_running import ServerStateRunning
 from config.config import Config
+from model.vmcs import VMCS, VMCSField, VMCSField16
 
 class DebugClient():
   def __init__(self, config):
@@ -73,6 +74,7 @@ class DebugClient():
 
 # Debug client main
 try: 
+  vmcs = VMCS.createVMCS()
   debugClient = DebugClient(Config('config/debug_client.config'))
   debugClient.run()
 except BadReply, msg:
