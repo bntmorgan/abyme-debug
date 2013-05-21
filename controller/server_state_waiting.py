@@ -1,6 +1,6 @@
 import urwid
 
-from controller.server_state import ServerState, BadReply
+from controller.server_state import ServerState, BadReply, ServerStateMinibufCommand
 import controller.server_state_running
 import controller.server_state_dump
 import controller.server_state_write
@@ -21,7 +21,7 @@ class ServerStateWaiting(ServerState):
       self.debugClient.setStep()
       self.debugClient.sendContinue()
       # server is now running
-      self.changeState(controller.server_state_running.ServerStateRunning)
+      self.changeState(controller.server_state_running.ServerStateRunning(self.debugClient))
     elif input == 'up':
       self.debugClient.gui.messageFocusDec()
     elif input == 'down':
@@ -30,16 +30,20 @@ class ServerStateWaiting(ServerState):
       self.debugClient.endStep()
       self.debugClient.sendContinue()
       # server is now running
-      self.changeState(controller.server_state_running.ServerStateRunning)
+      self.changeState(controller.server_state_running.ServerStateRunning(self.debugClient))
     elif input == 't':
       if self.debugClient.mTF:
         self.debugClient.endMTF()
       else:
         self.debugClient.setMTF()
     elif input == 'r':
-      self.changeState(controller.server_state_dump.ServerStateDump)
+      self.changeState(ServerStateMinibufCommand(self.debugClient, 
+        u"Address length : ",
+        controller.server_state_dump.CommandDump(self.debugClient)))
     elif input == 'w':
-      self.changeState(controller.server_state_write.ServerStateWrite)
+      self.changeState(ServerStateMinibufCommand(self.debugClient, 
+        u"Address data : ",
+        controller.server_state_write.CommandWrite(self.debugClient)))
     elif input == 'd':
       if len(self.debugClient.messages) == 0:
         return
@@ -54,9 +58,11 @@ class ServerStateWaiting(ServerState):
       m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
       self.debugClient.gui.display(m.formatFull())
     elif input == ':':
-      self.changeState(controller.server_state_set_line.ServerStateSetLine)
+      self.changeState(ServerStateMinibufCommand(self.debugClient, 
+        u" : ",
+        controller.server_state_set_line.CommandSetLine(self.debugClient)))
     elif input == 'R':
-      self.changeState(controller.server_state_regs.ServerStateRegs)
+      self.changeState(controller.server_state_regs.ServerStateRegs(self.debugClient))
     else:
       self.usage()
   def notifyMessage(self, message):

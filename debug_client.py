@@ -22,6 +22,7 @@ class DebugClient():
     self.gui = None
     # Models
     self.vmcs = None
+    self.serverState = None
   def createComponents(self):
     # Create all the components
     self.messages = []

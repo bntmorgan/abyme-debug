@@ -16,7 +16,7 @@ class ServerStateRunning(ServerState):
     elif input == 's':
       self.debugClient.setStep()
     elif input == 'f':
-      self.changeState(controller.server_state_waiting.ServerStateWaiting)
+      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
     else:
       self.usage()
   def notifyMessage(self, message):
@@ -24,12 +24,12 @@ class ServerStateRunning(ServerState):
     if message.messageType == Message.UnhandledVMExit:
       self.debugClient.step = 1
       # Server is now waiting
-      self.changeState(controller.server_state_waiting.ServerStateWaiting)
+      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
     elif message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
       if self.debugClient.step:
         # Server is now waiting
-        self.changeState(controller.server_state_waiting.ServerStateWaiting)
+        self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
       else:
         self.debugClient.sendContinue()
     else:

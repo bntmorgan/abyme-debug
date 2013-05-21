@@ -1,23 +1,22 @@
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf
+from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Command
 import controller.server_state_waiting
 from model.message import *
 
-class ServerStateSetLine(ServerStateMinibuf):
+class CommandSetLine(Command):
   def __init__(self, debugClient):
-    ServerStateMinibuf.__init__(self, debugClient, u": ")
+    Command.__init__(self, debugClient)
     self.line = 0
-  def onSubmit(self):
-    # set line
-    self.debugClient.gui.messageFocus(self.line)
-    self.changeState(controller.server_state_waiting.ServerStateWaiting)
-  def onCancel(self):
-    self.changeState(controller.server_state_waiting.ServerStateWaiting)
-  def validate(self):
-    t = self.input.get_edit_text()
+  def validate(self, t):
     try:
       self.line = int(t)
     except:
       return 0
     return 1
+  def cancel(self):
+    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+  def submit(self):
+    # set line
+    self.debugClient.gui.messageFocus(self.line)
+    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type a number a line")

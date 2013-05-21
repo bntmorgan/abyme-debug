@@ -1,26 +1,16 @@
 import urwid
 
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf
+from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Command
 import controller.server_state_waiting
 from model.message import *
 
-class ServerStateWrite(ServerStateMinibuf):
+class CommandWrite(Command):
   def __init__(self, debugClient):
-    ServerStateMinibuf.__init__(self, debugClient, u"Address data : ")
+    Command.__init__(self, debugClient)
     # Memory request values
     self.address = 0
-    self.data = 0
-  def sendMemoryRequest(self):
-    m = MessageMemoryWrite(self.address, self.data)
-    self.debugClient.network.send(m)
-    self.debugClient.addMessage(m)
-  def onCancel(self):
-    self.changeState(controller.server_state_waiting.ServerStateWaiting)
-  def onSubmit(self):
-    self.sendMemoryRequest()
-    self.changeState(ServerStateWriteReply)
-  def validate(self):
-    t = self.input.get_edit_text()
+    self.length = 0
+  def validate(self, t):
     t = t.rsplit(' ')
     if len(t) != 2:
       return 0
@@ -30,6 +20,15 @@ class ServerStateWrite(ServerStateMinibuf):
     except:
       return 0
     return 1
+  def cancel(self):
+    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+  def submit(self):
+    self.sendMemoryRequest()
+    self.changeState(ServerStateWriteReply(self.debugClient))
+  def sendMemoryRequest(self):
+    m = MessageMemoryWrite(self.address, self.data)
+    self.debugClient.network.send(m)
+    self.debugClient.addMessage(m)
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address, some data to write 0xffffffff 0x1000 and carriage return")
 
@@ -42,6 +41,6 @@ class ServerStateWriteReply(ServerState):
     if not isinstance(message, MessageMemoryWriteCommit):
       raise BadReply
     self.debugClient.addMessage(message)
-    self.changeState(controller.server_state_waiting.ServerStateWaiting)
+    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def usage(self):
     self.debugClient.gui.display("Usage()\n Waiting for the memory response")

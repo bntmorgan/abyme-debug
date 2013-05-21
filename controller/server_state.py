@@ -9,8 +9,8 @@ class ServerState(object):
     raise NotImplementedError("Subclasses should implement this!")
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")
-  def changeState(self, serverStateClass):
-    self.debugClient.serverState = serverStateClass(self.debugClient)
+  def changeState(self, serverState):
+    self.debugClient.serverState = serverState
 
 class BadReply(BaseException):
   def __init__(self, value):
@@ -23,6 +23,7 @@ class ServerStateMinibuf(ServerState):
     self.debugClient = debugClient
     self.bottomBar = self.debugClient.gui.bottomBar
     self.label = label
+    self.input = None
     self.addInput()
   def addInput(self):
     self.input = urwid.Edit(self.label, u"")
@@ -33,17 +34,17 @@ class ServerStateMinibuf(ServerState):
   def removeInput(self):
     self.bottomBar.contents.pop()
     self.debugClient.gui.focusList()
-  def onSubmit(self):
+  def submit(self):
     raise NotImplementedError("Subclasses should implement this!")
-  def onCancel(self):
+  def cancel(self):
     raise NotImplementedError("Subclasses should implement this!")
   def notifyUserInput(self, input):
     if input == 'enter' and self.validate():
       self.removeInput()
-      self.onSubmit()
+      self.submit()
     elif input == 'esc':
       self.removeInput()
-      self.onCancel()
+      self.cancel()
     else:
       self.usage()
   def changed(self, widget, text):
@@ -54,3 +55,30 @@ class ServerStateMinibuf(ServerState):
     raise BadReply(-1)
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")
+
+class ServerStateMinibufCommand(ServerStateMinibuf):
+  def __init__(self, debugClient, label, command):
+    ServerStateMinibuf.__init__(self, debugClient, label)
+    self.command = command
+  def submit(self):
+    self.command.submit()
+  def cancel(self):
+    self.command.cancel()
+  def validate(self):
+    return self.command.validate(self.input.get_edit_text())
+  def usage(self):
+    self.command.usage()
+
+class Command(object):
+  def __init__(self, debugClient):
+    self.debugClient = debugClient
+  def validate(self, debugClient):
+    raise NotImplementedError("Subclasses should implement this!")
+  def cancel(self):
+    raise NotImplementedError("Subclasses should implement this!")
+  def submit(self):
+    raise NotImplementedError("Subclasses should implement this!")
+  def usage(self):
+    raise NotImplementedError("Subclasses should implement this!")
+  def changeState(self, state):
+    self.debugClient.serverState.changeState(state)
