@@ -27,6 +27,8 @@ class CommandDump(Command):
     m = MessageMemoryRead(self.address, self.length)
     self.debugClient.network.send(m)
     self.debugClient.addMessage(m)
+  def complete(self, t):
+    self.usage()
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address and size 0xffffffff 0x1000 and carriage return")
 

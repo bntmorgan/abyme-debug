@@ -18,5 +18,7 @@ class CommandSetLine(Command):
     # set line
     self.debugClient.gui.messageFocus(self.line)
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+  def complete(self, t):
+    self.usage()
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type a number a line")

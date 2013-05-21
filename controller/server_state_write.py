@@ -14,8 +14,8 @@ class CommandWrite(Command):
     t = t.rsplit(' ')
     if len(t) != 2:
       return 0
-    self.address = int(t[0], 0)
     try:
+      self.address = int(t[0], 0)
       self.data = t[1].decode('hex')
     except:
       return 0
@@ -29,6 +29,8 @@ class CommandWrite(Command):
     m = MessageMemoryWrite(self.address, self.data)
     self.debugClient.network.send(m)
     self.debugClient.addMessage(m)
+  def complete(self, t):
+    self.usage()
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address, some data to write 0xffffffff 0x1000 and carriage return")
 

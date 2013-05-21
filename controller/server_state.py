@@ -28,7 +28,7 @@ class ServerStateMinibuf(ServerState):
   def addInput(self):
     self.input = urwid.Edit(self.label, u"")
     self.bottomBar.contents.append((self.input, self.bottomBar.options()))
-    urwid.connect_signal(self.input, "change", self.changed)
+    # urwid.connect_signal(self.input, "change", self.changed)
     self.bottomBar.focus_position = 2
     self.debugClient.gui.focusMinibuf()
   def removeInput(self):
@@ -45,11 +45,15 @@ class ServerStateMinibuf(ServerState):
     elif input == 'esc':
       self.removeInput()
       self.cancel()
+    elif input == 'tab':
+      self.complete(self.input.get_edit_text())
     else:
       self.usage()
   def changed(self, widget, text):
     self.debugClient.gui.display('Typed : %s' % (text))
-  def validate(self):
+  def validate(self, t):
+    raise NotImplementedError("Subclasses should implement this!")
+  def complete(self, t):
     raise NotImplementedError("Subclasses should implement this!")
   def notifyMessage(self, message):
     raise BadReply(-1)
@@ -68,17 +72,21 @@ class ServerStateMinibufCommand(ServerStateMinibuf):
     return self.command.validate(t)
   def usage(self):
     self.command.usage()
+  def complete(self, t):
+    self.command.complete(t)
 
 class Command(object):
   def __init__(self, debugClient):
     self.debugClient = debugClient
-  def validate(self, debugClient):
+  def validate(self, t):
     raise NotImplementedError("Subclasses should implement this!")
   def cancel(self):
     raise NotImplementedError("Subclasses should implement this!")
   def submit(self):
     raise NotImplementedError("Subclasses should implement this!")
   def usage(self):
+    raise NotImplementedError("Subclasses should implement this!")
+  def complete(self, t):
     raise NotImplementedError("Subclasses should implement this!")
   def changeState(self, state):
     self.debugClient.serverState.changeState(state)

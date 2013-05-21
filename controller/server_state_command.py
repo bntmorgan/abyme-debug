@@ -20,21 +20,42 @@ class TestRegex(object):
 class ServerStateCommand(ServerStateMinibuf):
   def __init__(self, debugClient):
     ServerStateMinibuf.__init__(self, debugClient, u" : ")
-    self.command = controller.server_state_set_line.CommandSetLine(self.debugClient)
+    self.command = None
+    self.args = None
   def submit(self):
-    self.command.submit()
+    if self.command is not None:
+      self.command.submit()
   def cancel(self):
-    self.command.cancel()
+    if self.command is not None:
+      self.command.cancel()
   def validate(self, t):
+    self.getCommand(t)
+    if self.command is not None:
+      return self.command.validate(self.args)
+    else:
+      return 0
+  def complete(self, t):
+    self.getCommand(t)
+    if self.command is not None:
+      self.command.complete(t)
+    else:
+      self.usage()
+  def usage(self):
+    if self.command is not None:
+      self.command.usage()
+    else:
+      self.debugClient.gui.display("write\nread\n<line>")
+  def getCommand(self, t):
+    self.command = None
+    self.args = t
     test = TestRegex()
     if test.test("^[ ]*write (.*)$", t):
       self.command = controller.server_state_write.CommandWrite(self.debugClient)
-      t = test.m.group(1)
+      self.args = test.m.group(1)
     elif test.test("^[ ]*read (.*)$", t):
       self.command = controller.server_state_dump.CommandDump(self.debugClient)
-      t = test.m.group(1)
-    else:
+      self.args = test.m.group(1)
+    elif test.test("^.*[0-9]+.*$", t):
       self.command = controller.server_state_set_line.CommandSetLine(self.debugClient)
-    return self.command.validate(t)
-  def usage(self):
-    self.command.usage()
+    else:
+      self.command = None
