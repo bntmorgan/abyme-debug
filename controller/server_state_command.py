@@ -3,6 +3,7 @@ import controller.server_state_waiting
 import controller.server_state_set_line
 import controller.server_state_dump
 import controller.server_state_write
+import controller.server_state_vmcs
 import re
 from model.message import *
 
@@ -37,14 +38,14 @@ class ServerStateCommand(ServerStateMinibuf):
   def complete(self, t):
     self.getCommand(t)
     if self.command is not None:
-      self.command.complete(t)
+      self.command.complete(self.args)
     else:
       self.usage()
   def usage(self):
     if self.command is not None:
       self.command.usage()
     else:
-      self.debugClient.gui.display("write\nread\n<line>")
+      self.debugClient.gui.display("write\nread\nvmcs read\n<line>")
   def getCommand(self, t):
     self.command = None
     self.args = t
@@ -54,6 +55,9 @@ class ServerStateCommand(ServerStateMinibuf):
       self.args = test.m.group(1)
     elif test.test("^[ ]*read (.*)$", t):
       self.command = controller.server_state_dump.CommandDump(self.debugClient)
+      self.args = test.m.group(1)
+    elif test.test("^[ ]*vmcs read (.*)$", t):
+      self.command = controller.server_state_vmcs.CommandVMCS(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^.*[0-9]+.*$", t):
       self.command = controller.server_state_set_line.CommandSetLine(self.debugClient)
