@@ -20,6 +20,8 @@ class DebugClient():
     # Pointers
     self.network = None
     self.gui = None
+    # Models
+    self.vmcs = None
   def createComponents(self):
     # Create all the components
     self.messages = []
@@ -34,8 +36,10 @@ class DebugClient():
     self.endMTF() # Monitor Trap Flag is activated
     # Server state machine : We start with the server running
     self.serverState = ServerStateRunning(self)
-    # create the socket
+    # Create the socket
     self.network.createSocket()
+    # Create the models
+    self.vmcs = VMCS.createVMCS()
   def run(self):
     self.createComponents()
     self.gui.run()
@@ -74,7 +78,6 @@ class DebugClient():
 
 # Debug client main
 try: 
-  vmcs = VMCS.createVMCS()
   debugClient = DebugClient(Config('config/debug_client.config'))
   debugClient.run()
 except BadReply, msg:
