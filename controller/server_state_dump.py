@@ -12,8 +12,11 @@ class CommandDump(Command):
     t = t.rsplit(' ')
     if len(t) != 2:
       return 0
-    self.address = int(t[0], 0)
-    self.length = int(t[1], 0)
+    try:
+      self.address = int(t[0], 0)
+      self.length = int(t[1], 0)
+    except:
+      return
     return 1
   def cancel(self):
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
