@@ -6,6 +6,7 @@ import controller.server_state_dump
 import controller.server_state_write
 import controller.server_state_set_line
 import controller.server_state_regs
+import controller.server_state_command
 import model.message
 from model.bin import Bin
 
@@ -58,9 +59,7 @@ class ServerStateWaiting(ServerState):
       m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
       self.debugClient.gui.display(m.formatFull())
     elif input == ':':
-      self.changeState(ServerStateMinibufCommand(self.debugClient, 
-        u" : ",
-        controller.server_state_set_line.CommandSetLine(self.debugClient)))
+      self.changeState(controller.server_state_command.ServerStateCommand(self.debugClient))
     elif input == 'R':
       self.changeState(controller.server_state_regs.ServerStateRegs(self.debugClient))
     else:

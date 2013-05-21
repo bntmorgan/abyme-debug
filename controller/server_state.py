@@ -39,7 +39,7 @@ class ServerStateMinibuf(ServerState):
   def cancel(self):
     raise NotImplementedError("Subclasses should implement this!")
   def notifyUserInput(self, input):
-    if input == 'enter' and self.validate():
+    if input == 'enter' and self.validate(self.input.get_edit_text()):
       self.removeInput()
       self.submit()
     elif input == 'esc':
@@ -64,8 +64,8 @@ class ServerStateMinibufCommand(ServerStateMinibuf):
     self.command.submit()
   def cancel(self):
     self.command.cancel()
-  def validate(self):
-    return self.command.validate(self.input.get_edit_text())
+  def validate(self, t):
+    return self.command.validate(t)
   def usage(self):
     self.command.usage()
 
