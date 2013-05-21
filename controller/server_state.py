@@ -35,10 +35,15 @@ class ServerStateMinibuf(ServerState):
     self.debugClient.gui.focusList()
   def onSubmit(self):
     raise NotImplementedError("Subclasses should implement this!")
+  def onCancel(self):
+    raise NotImplementedError("Subclasses should implement this!")
   def notifyUserInput(self, input):
     if input == 'enter' and self.validate():
       self.removeInput()
       self.onSubmit()
+    elif input == 'esc':
+      self.removeInput()
+      self.onCancel()
     else:
       self.usage()
   def changed(self, widget, text):

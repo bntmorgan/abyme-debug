@@ -12,6 +12,8 @@ class ServerStateDump(ServerStateMinibuf):
     m = MessageMemoryRead(self.address, self.length)
     self.debugClient.network.send(m)
     self.debugClient.addMessage(m)
+  def onCancel(self):
+    self.changeState(controller.server_state_waiting.ServerStateWaiting)
   def onSubmit(self):
     self.sendMemoryRequest()
     self.changeState(ServerStateDumpReply)

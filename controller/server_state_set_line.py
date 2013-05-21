@@ -10,6 +10,8 @@ class ServerStateSetLine(ServerStateMinibuf):
     # set line
     self.debugClient.gui.messageFocus(self.line)
     self.changeState(controller.server_state_waiting.ServerStateWaiting)
+  def onCancel(self):
+    self.changeState(controller.server_state_waiting.ServerStateWaiting)
   def validate(self):
     t = self.input.get_edit_text()
     try:
