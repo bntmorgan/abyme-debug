@@ -7,6 +7,10 @@ from model.core import Core
 Message
 '''
 
+class BadMessage(BaseException):
+  def __str__(self):
+    return "Bad message usage"
+
 class Message(object):
   # Message Types
   (
@@ -21,7 +25,9 @@ class Message(object):
       CoreRegsRead,
       CoreRegsData,
       UnhandledVMExit,
-  ) = range(11)
+      VMCSRead,
+      VMCSData,
+  ) = range(13)
   def __init__(self):
     self.messageType = Message.Message
     self.coreNumber = 0
@@ -70,6 +76,10 @@ class Message(object):
       m = MessageCoreRegsData()
     elif m.messageType == Message.UnhandledVMExit:
       m = MessageUnhandledVMExit()
+    elif m.messageType == Message.VMCSRead:
+      m = MessageVMCSRead()
+    elif m.messageType == Message.VMCSData:
+      m = MessageVMCSData()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -97,8 +107,6 @@ class MessageVMExit(MessageIn):
     MessageIn.unPack(self)
     t = unpack('I', self.frame.payload[2:6])
     self.exitReason = t[0]
-  def pack(self):
-    return MessageIn.pack(self) + pack('I', self.exitReason)
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
 
@@ -112,8 +120,6 @@ class MessageCoreRegsData(MessageIn):
   def unPack(self):
     # unpack core data
     self.core.unPack(self.frame.payload[2:])
-  def pack(self):
-    return MessageIn.pack(self)
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nCore regs :\n" + self.core.format()
 
@@ -132,8 +138,6 @@ class MessageMemoryData(MessageIn):
     self.address = t[0]
     self.length = t[1]
     self.data = self.frame.payload[18:18 + self.length] 
-  def pack(self):
-    return MessageIn.pack(self) + pack('QQ', self.address, self.length)
   def formatFull(self):
     return MessageIn.formatFull(self) + "\naddress : 0x%x\nlength : 0x%x\n%s" % (self.address, self.length, self.dump(16, self.address))
   def dump(self, length, n):
@@ -156,8 +160,6 @@ class MessageMemoryWriteCommit(MessageIn):
     MessageIn.unPack(self)
     t = unpack('B', self.frame.payload[2])
     self.ok = t[0]
-  def pack(self):
-    return MessageIn.pack(self) + pack('B', self.ok)
   def format(self):
     return "%s WriteCommit" % (MessageIn.format(self))
   def formatFull(self):
@@ -169,6 +171,17 @@ class MessageUnhandledVMExit(MessageVMExit):
     self.messageType = Message.UnhandledVMExit
   def format(self):
     return "%s Unhandled VMExit" % (MessageIn.format(self))
+
+class MessageVMCSData(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.MemoryVMCSData
+  def unPack(self):
+    MessageIn.unPack(self)
+  def format(self):
+    return "%s VMCSData" % (MessageIn.format(self))
+  def formatFull(self):
+    return MessageIn.formatFull(self)
 
 '''
 Output messages
@@ -198,11 +211,6 @@ class MessageMemoryRead(MessageOut):
     self.messageType = Message.MemoryRead
     self.address = address
     self.length = length
-  def unPack(self):
-    MessageOut.unPack(self)
-    t = unpack('QQ', self.frame.payload[2:18])
-    self.address = t[0]
-    self.length = t[1]
   def pack(self):
     return MessageOut.pack(self) + pack('QQ', self.address, self.length)
   def format(self):
@@ -215,12 +223,6 @@ class MessageMemoryWrite(MessageOut):
     self.address = address
     self.length = len(data)
     self.data = data
-  def unPack(self):
-    MessageOut.unPack(self)
-    t = unpack('QQ', self.frame.payload[2:18])
-    self.address = t[0]
-    self.length = t[1]
-    self.data = self.frame.payload[18:18 + self.length] 
   def pack(self):
     return MessageOut.pack(self) + pack('QQ', self.address, self.length) + self.data
   def format(self):
@@ -232,3 +234,27 @@ class MessageCoreRegsRead(MessageOut):
     self.messageType = Message.CoreRegsRead
   def format(self):
     return "%s CoreRegsRead" % (MessageOut.format(self))
+
+class MessageVMCSRead(MessageOut):
+  def __init__(self):
+    MessageOut.__init__(self, fields = [], vmcs = None)
+    self.messageType = Message.MemoryVMCSData
+    self.fields = fields
+    self.vmcs = vmcs
+    if self.vmcs == None:
+      raise BadMessage()
+  def pack(self):
+    s = MessageOut.pack(self)
+    for f in self.fields:
+      t = pack('B', self.vmcs.fields[f].length)
+      s = s + t
+      t = pack('Q', self.vmcs.fields[f].encoding)
+      s = s + t
+    # Mark the end of message
+    t = pack('B', 0)
+    s = s + t
+    return s
+  def format(self):
+    return "%s VMCSRead" % (MessageOut.format(self))
+  def formatFull(self):
+    return MessageOut.formatFull(self)

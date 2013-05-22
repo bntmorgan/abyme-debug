@@ -40,7 +40,7 @@ class ServerStateCommand(ServerStateMinibuf):
   def validate(self, t):
     if self.c == 1:
       p = self.cString.split(" ")
-      s = " ".join(p[:len(p) - 1]) + " %s " % (self.cValues[len(self.cValues) - 1 if self.cIndex == 0 else self.cIndex - 1])
+      s = " ".join(p[:len(p) - 1]) + "%s%s " % ("" if len(self.cString) == 0 else " ", self.cValues[len(self.cValues) - 1 if self.cIndex == 0 else self.cIndex - 1])
       self.setText(s)
       self.cString = ''
       self.cValues = []
@@ -59,13 +59,15 @@ class ServerStateCommand(ServerStateMinibuf):
       self.cIndex = 0 if self.cIndex == len(self.cValues) - 1 else self.cIndex + 1
       self.c = 1
     else:
-      self.cString = t
       self.cIndex = 0
       self.c = 0
       self.getCommand(t)
       if self.command is not None:
+        self.cString = t
         self.cValues = self.command.complete(self.args)
       else:
+        self.cString = ""
+        self.setText("")
         self.cValues = [
             "write",
             "read",
