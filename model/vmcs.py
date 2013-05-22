@@ -6,32 +6,32 @@ class VMCSField(object):
     self.value = 0
 
 class VMCSField16(VMCSField):
-  def __init__(self, encoding, name):
+  def __init__(self, encoding):
     VMCSField.__init__(self)
     self.length = 2
     self.encoding = encoding
-    self.name = name
+    self.name = Encoding.e[self.encoding]['name']
 
 class VMCSField32(VMCSField):
-  def __init__(self, encoding, name):
+  def __init__(self, encoding):
     VMCSField.__init__(self)
     self.length = 4
     self.encoding = encoding
-    self.name = name
+    self.name = Encoding.e[self.encoding]['name']
 
 class VMCSField64(VMCSField):
-  def __init__(self, encoding, name):
+  def __init__(self, encoding):
     VMCSField.__init__(self)
     self.length = 8
     self.encoding = encoding
-    self.name = name
+    self.name = Encoding.e[self.encoding]['name']
 
 class VMCSFieldNW(VMCSField):
-  def __init__(self, encoding, name):
+  def __init__(self, encoding):
     VMCSField.__init__(self)
     self.length = 4
     self.encoding = encoding
-    self.name = name
+    self.name = Encoding.e[self.encoding]['name']
 
 class VMCS(object):
   def __init__(self):
@@ -45,199 +45,398 @@ class VMCS(object):
     # create the dict
     # 16-BIT FIELDS
     # 16-Bit Control Fields
-    f = VMCSField16(0x00000000, 'VIRTUAL_PROCESSOR_ID'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000002, 'POSTED_INT_NOTIF_VECTOR'); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000000); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000002); vmcs.fields[f.name] = f
     # 16-Bit Guest-State Fields
-    f = VMCSField16(0x00000800, 'GUEST_ES_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000802, 'GUEST_CS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000804, 'GUEST_SS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000806, 'GUEST_DS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000808, 'GUEST_FS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x0000080A, 'GUEST_GS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x0000080C, 'GUEST_LDTR_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x0000080E, 'GUEST_TR_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000810, 'GUEST_INTERRUPT_STATUS'); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000800); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000802); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000804); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000806); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000808); vmcs.fields[f.name] = f
+    f = VMCSField16(0x0000080A); vmcs.fields[f.name] = f
+    f = VMCSField16(0x0000080C); vmcs.fields[f.name] = f
+    f = VMCSField16(0x0000080E); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000810); vmcs.fields[f.name] = f
     # 16-Bit Host-State Fields
-    f = VMCSField16(0x00000C00, 'HOST_ES_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000C02, 'HOST_CS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000C04, 'HOST_SS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000C06, 'HOST_DS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000C08, 'HOST_FS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000C0A, 'HOST_GS_SELECTOR'); vmcs.fields[f.name] = f
-    f = VMCSField16(0x00000C0C, 'HOST_TR_SELECTOR'); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C00); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C02); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C04); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C06); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C08); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C0A); vmcs.fields[f.name] = f
+    f = VMCSField16(0x00000C0C); vmcs.fields[f.name] = f
     # 64-BIT FIELDS
     # 64-Bit Control Fields
-    f = VMCSField64(0x00002000, 'IO_BITMAP_A'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002001, 'IO_BITMAP_A_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002002, 'IO_BITMAP_B'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002003, 'IO_BITMAP_B_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002004, 'MSR_BITMAP'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002005, 'MSR_BITMAP_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002006, 'VM_EXIT_MSR_STORE_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002007, 'VM_EXIT_MSR_STORE_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002008, 'VM_EXIT_MSR_LOAD_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002009, 'VM_EXIT_MSR_LOAD_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000200A, 'VM_ENTRY_MSR_LOAD_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000200B, 'VM_ENTRY_MSR_LOAD_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000200C, 'EXECUTIVE_VMCS_POINTER'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000200D, 'EXECUTIVE_VMCS_POINTER_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002010, 'TSC_OFFSET'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002011, 'TSC_OFFSET_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002012, 'VIRTUAL_APIC_PAGE_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002013, 'VIRTUAL_APIC_PAGE_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002014, 'APIC_ACCESS_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002015, 'APIC_ACCESS_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002016, 'POSTED_INTERRUPT_DESCRIPTOR_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002017, 'POSTED_INTERRUPT_DESCRIPTOR_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002018, 'VM_FUNCTION_CONTROLS'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002019, 'VM_FUNCTION_CONTROLS_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000201A, 'EPT_POINTER'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000201B, 'EPT_POINTER_HIGHT'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000201C, 'EOI_EXIT0'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000201D, 'EOI_EXIT0_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000201E, 'EOI_EXIT1'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000201F, 'EOI_EXIT1_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002020, 'EOI_EXIT2'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002021, 'EOI_EXIT2_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002022, 'EOI_EXIT3'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002023, 'EOI_EXIT3_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002024, 'EPT_LIST_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002025, 'EPT_LIST_ADDR_HIGH'); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002000); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002001); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002002); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002003); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002004); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002005); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002006); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002007); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002008); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002009); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000200A); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000200B); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000200C); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000200D); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002010); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002011); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002012); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002013); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002014); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002015); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002016); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002017); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002018); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002019); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000201A); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000201B); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000201C); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000201D); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000201E); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000201F); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002020); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002021); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002022); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002023); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002024); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002025); vmcs.fields[f.name] = f
     # 64-Bit Read-Only Data Field
-    f = VMCSField64(0x00002400, 'GUEST_PHYSICAL_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002401, 'GUEST_PHYSICAL_ADDR_HIGH'); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002400); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002401); vmcs.fields[f.name] = f
     # 64-Bit Guest-State Fields
-    f = VMCSField64(0x00002800, 'GUEST_PHYSICAL_ADDR'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002801, 'GUEST_PHYSICAL_ADDR_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002802, 'VMCS_LINK_POINTER'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002803, 'VMCS_LINK_POINTER_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002804, 'GUEST_IA32_DEBUGCTL'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002805, 'GUEST_IA32_DEBUGCTL_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002806, 'GUEST_IA32_PAT'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002807, 'GUEST_IA32_PAT_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002808, 'GUEST_IA32_EFER'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002809, 'GUEST_IA32_EFER_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000280A, 'GUEST_IA32_PERF_GLOBAL_CTRL'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000280B, 'GUEST_IA32_PERF_GLOBAL_CTRL_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000280C, 'GUEST_PDPTR0'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000280D, 'GUEST_PDPTR0_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000280E, 'GUEST_PDPTR1'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x0000280F, 'GUEST_PDPTR1_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002810, 'GUEST_PDPTR2'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002811, 'GUEST_PDPTR2_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002812, 'GUEST_PDPTR3'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002813, 'GUEST_PDPTR3_HIGH'); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002800); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002801); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002802); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002803); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002804); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002805); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002806); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002807); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002808); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002809); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000280A); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000280B); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000280C); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000280D); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000280E); vmcs.fields[f.name] = f
+    f = VMCSField64(0x0000280F); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002810); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002811); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002812); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002813); vmcs.fields[f.name] = f
     # 64-Bit Host-State Fields
-    f = VMCSField64(0x00002C00, 'HOST_IA32_PAT'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002C01, 'HOST_IA32_PAT_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002C02, 'HOST_IA32_EFER'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002C03, 'HOST_IA32_EFER_HIGH'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002C04, 'HOST_IA32_PERF_GLOBAL_CTRL'); vmcs.fields[f.name] = f
-    f = VMCSField64(0x00002C05, 'HOST_IA32_PERF_GLOBAL_CTRL_HIGH'); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002C00); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002C01); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002C02); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002C03); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002C04); vmcs.fields[f.name] = f
+    f = VMCSField64(0x00002C05); vmcs.fields[f.name] = f
     # 32-BIT FIELDS
     # 32-Bit Control Fields
-    f = VMCSField32(0x00004000, 'PIN_BASED_VM_EXEC_CONTROL'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004002, 'CPU_BASED_VM_EXEC_CONTROL'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004004, 'EXCEPTION_BITMAP'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004006, 'PAGE_FAULT_ERROR_CODE_MASK'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004008, 'PAGE_FAULT_ERROR_CODE_MATCH'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000400A, 'CR3_TARGET_COUNT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000400C, 'VM_EXIT_CONTROLS'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000400E, 'VM_EXIT_MSR_STORE_COUNT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004010, 'VM_EXIT_MSR_LOAD_COUNT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004012, 'VM_ENTRY_CONTROLS'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004014, 'VM_ENTRY_MSR_LOAD_COUNT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004016, 'VM_ENTRY_INTR_INFO_FIELD'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004018, 'VM_ENTRY_EXCEPTION_ERROR_CODE'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000401A, 'VM_ENTRY_INSTRUCTION_LEN'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000401C, 'TPR_THRESHOLD'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000401E, 'SECONDARY_VM_EXEC_CONTROL'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004020, 'PLE_GAP'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004022, 'PLE_WINDOW'); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004000); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004002); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004004); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004006); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004008); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000400A); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000400C); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000400E); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004010); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004012); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004014); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004016); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004018); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000401A); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000401C); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000401E); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004020); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004022); vmcs.fields[f.name] = f
     # 32-Bits Read-Only Data Fields
-    f = VMCSField32(0x00004400, 'VM_INSTRUCTION_ERROR'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004402, 'VM_EXIT_REASON'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004404, 'VM_EXIT_INTR_INFO'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004406, 'VM_EXIT_INTR_ERROR_CODE'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004408, 'IDT_VECTORING_INFO_FIELD'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000440A, 'IDT_VECTORING_ERROR_CODE'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000440C, 'VM_EXIT_INSTRUCTION_LEN'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000440E, 'VMX_INSTRUCTION_INFO'); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004400); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004402); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004404); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004406); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004408); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000440A); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000440C); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000440E); vmcs.fields[f.name] = f
     # 32-Bits Guest-State Fields
-    f = VMCSField32(0x00004800, 'GUEST_ES_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004802, 'GUEST_CS_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004804, 'GUEST_SS_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004806, 'GUEST_DS_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004808, 'GUEST_FS_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000480A, 'GUEST_GS_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000480C, 'GUEST_LDTR_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000480E, 'GUEST_TR_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004810, 'GUEST_GDTR_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004812, 'GUEST_IDTR_LIMIT'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004814, 'GUEST_ES_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004816, 'GUEST_CS_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004818, 'GUEST_SS_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000481A, 'GUEST_DS_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000481C, 'GUEST_FS_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000481E, 'GUEST_GS_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004820, 'GUEST_LDTR_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004822, 'GUEST_TR_AR_BYTES'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004824, 'GUEST_INTERRUPTIBILITY_INFO'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004826, 'GUEST_ACTIVITY_STATE'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x00004828, 'GUEST_SMBASE'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000482A, 'GUEST_SYSENTER_CS'); vmcs.fields[f.name] = f
-    f = VMCSField32(0x0000482E, 'VMX_PREEMPTION_TIMER_VALUE'); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004800); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004802); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004804); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004806); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004808); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000480A); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000480C); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000480E); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004810); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004812); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004814); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004816); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004818); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000481A); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000481C); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000481E); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004820); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004822); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004824); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004826); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004828); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000482A); vmcs.fields[f.name] = f
+    f = VMCSField32(0x0000482E); vmcs.fields[f.name] = f
     # 32-Bits Host-State Fields
-    f = VMCSField32(0x00004C00, 'HOST_IA32_SYSENTER_CS'); vmcs.fields[f.name] = f
+    f = VMCSField32(0x00004C00); vmcs.fields[f.name] = f
     # NATURAL-WIDTH FIELDS
     # Natural-Width Control Fields
-    f = VMCSFieldNW(0x00006000, 'CR0_GUEST_HOST_MASK'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006002, 'CR4_GUEST_HOST_MASK'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006004, 'CR0_READ_SHADOW'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006006, 'CR4_READ_SHADOW'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006008, 'CR3_TARGET_VALUE0'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000600a, 'CR3_TARGET_VALUE1'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000600c, 'CR3_TARGET_VALUE2'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000600e, 'CR3_TARGET_VALUE3'); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006000); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006002); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006004); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006006); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006008); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000600a); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000600c); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000600e); vmcs.fields[f.name] = f
     # Natural-Width Read-Only Data Fields
-    f = VMCSFieldNW(0x00006400, 'EXIT_QUALIFICATION'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006402, 'IO_RCX'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006404, 'IO_RSI'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006406, 'IO_RDI'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006408, 'IO_RIP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000640a, 'GUEST_LINEAR_ADDRESS'); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006400); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006402); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006404); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006406); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006408); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000640a); vmcs.fields[f.name] = f
     # Natural-Width Guest-State Fields
-    f = VMCSFieldNW(0x00006800, 'GUEST_CR0'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006802, 'GUEST_CR3'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006804, 'GUEST_CR4'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006806, 'GUEST_ES_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006808, 'GUEST_CS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000680a, 'GUEST_SS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000680c, 'GUEST_DS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000680e, 'GUEST_FS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006810, 'GUEST_GS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006812, 'GUEST_LDTR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006814, 'GUEST_TR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006816, 'GUEST_GDTR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006818, 'GUEST_IDTR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000681a, 'GUEST_DR7'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000681c, 'GUEST_RSP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x0000681e, 'GUEST_RIP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006820, 'GUEST_RFLAGS'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006822, 'GUEST_PENDING_DBG_EXCEPTIONS'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006824, 'GUEST_SYSENTER_ESP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006826, 'GUEST_SYSENTER_EIP'); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006800); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006802); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006804); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006806); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006808); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000680a); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000680c); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000680e); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006810); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006812); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006814); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006816); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006818); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000681a); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000681c); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x0000681e); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006820); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006822); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006824); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006826); vmcs.fields[f.name] = f
     # Natural-Width Host-State Fields
-    f = VMCSFieldNW(0x00006c00, 'HOST_CR0'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c02, 'HOST_CR3'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c04, 'HOST_CR4'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c06, 'HOST_FS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c08, 'HOST_GS_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c0a, 'HOST_TR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c0c, 'HOST_GDTR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c0e, 'HOST_IDTR_BASE'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c10, 'HOST_IA32_SYSENTER_ESP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c12, 'HOST_IA32_SYSENTER_EIP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c14, 'HOST_RSP'); vmcs.fields[f.name] = f
-    f = VMCSFieldNW(0x00006c16, 'HOST_RIP'); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c00); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c02); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c04); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c06); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c08); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c0a); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c0c); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c0e); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c10); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c12); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c14); vmcs.fields[f.name] = f
+    f = VMCSFieldNW(0x00006c16); vmcs.fields[f.name] = f
     return vmcs
+
+class Encoding(object):
+  e = {
+    0x00000000: {'name': 'VIRTUAL_PROCESSOR_ID', 'c': VMCSField16},
+    0x00000002: {'name': 'POSTED_INT_NOTIF_VECTOR', 'c': VMCSField16},
+    # 16-Bit Guest-State Fields
+    0x00000800: {'name': 'GUEST_ES_SELECTOR', 'c': VMCSField16},
+    0x00000802: {'name': 'GUEST_CS_SELECTOR', 'c': VMCSField16},
+    0x00000804: {'name': 'GUEST_SS_SELECTOR', 'c': VMCSField16},
+    0x00000806: {'name': 'GUEST_DS_SELECTOR', 'c': VMCSField16},
+    0x00000808: {'name': 'GUEST_FS_SELECTOR', 'c': VMCSField16},
+    0x0000080A: {'name': 'GUEST_GS_SELECTOR', 'c': VMCSField16},
+    0x0000080C: {'name': 'GUEST_LDTR_SELECTOR', 'c': VMCSField16},
+    0x0000080E: {'name': 'GUEST_TR_SELECTOR', 'c': VMCSField16},
+    0x00000810: {'name': 'GUEST_INTERRUPT_STATUS', 'c': VMCSField16},
+    # 16-Bit Host-State Fields
+    0x00000C00: {'name': 'HOST_ES_SELECTOR', 'c': VMCSField16},
+    0x00000C02: {'name': 'HOST_CS_SELECTOR', 'c': VMCSField16},
+    0x00000C04: {'name': 'HOST_SS_SELECTOR', 'c': VMCSField16},
+    0x00000C06: {'name': 'HOST_DS_SELECTOR', 'c': VMCSField16},
+    0x00000C08: {'name': 'HOST_FS_SELECTOR', 'c': VMCSField16},
+    0x00000C0A: {'name': 'HOST_GS_SELECTOR', 'c': VMCSField16},
+    0x00000C0C: {'name': 'HOST_TR_SELECTOR', 'c': VMCSField16},
+    # 64-BIT FIELDS
+    # 64-Bit Control Fields
+    0x00002000: {'name': 'IO_BITMAP_A', 'c': VMCSField64},
+    0x00002001: {'name': 'IO_BITMAP_A_HIGH', 'c': VMCSField64},
+    0x00002002: {'name': 'IO_BITMAP_B', 'c': VMCSField64},
+    0x00002003: {'name': 'IO_BITMAP_B_HIGH', 'c': VMCSField64},
+    0x00002004: {'name': 'MSR_BITMAP', 'c': VMCSField64},
+    0x00002005: {'name': 'MSR_BITMAP_HIGH', 'c': VMCSField64},
+    0x00002006: {'name': 'VM_EXIT_MSR_STORE_ADDR', 'c': VMCSField64},
+    0x00002007: {'name': 'VM_EXIT_MSR_STORE_ADDR_HIGH', 'c': VMCSField64},
+    0x00002008: {'name': 'VM_EXIT_MSR_LOAD_ADDR', 'c': VMCSField64},
+    0x00002009: {'name': 'VM_EXIT_MSR_LOAD_ADDR_HIGH', 'c': VMCSField64},
+    0x0000200A: {'name': 'VM_ENTRY_MSR_LOAD_ADDR', 'c': VMCSField64},
+    0x0000200B: {'name': 'VM_ENTRY_MSR_LOAD_ADDR_HIGH', 'c': VMCSField64},
+    0x0000200C: {'name': 'EXECUTIVE_VMCS_POINTER', 'c': VMCSField64},
+    0x0000200D: {'name': 'EXECUTIVE_VMCS_POINTER_HIGH', 'c': VMCSField64},
+    0x00002010: {'name': 'TSC_OFFSET', 'c': VMCSField64},
+    0x00002011: {'name': 'TSC_OFFSET_HIGH', 'c': VMCSField64},
+    0x00002012: {'name': 'VIRTUAL_APIC_PAGE_ADDR', 'c': VMCSField64},
+    0x00002013: {'name': 'VIRTUAL_APIC_PAGE_ADDR_HIGH', 'c': VMCSField64},
+    0x00002014: {'name': 'APIC_ACCESS_ADDR', 'c': VMCSField64},
+    0x00002015: {'name': 'APIC_ACCESS_ADDR_HIGH', 'c': VMCSField64},
+    0x00002016: {'name': 'POSTED_INTERRUPT_DESCRIPTOR_ADDR', 'c': VMCSField64},
+    0x00002017: {'name': 'POSTED_INTERRUPT_DESCRIPTOR_ADDR_HIGH', 'c': VMCSField64},
+    0x00002018: {'name': 'VM_FUNCTION_CONTROLS', 'c': VMCSField64},
+    0x00002019: {'name': 'VM_FUNCTION_CONTROLS_HIGH', 'c': VMCSField64},
+    0x0000201A: {'name': 'EPT_POINTER', 'c': VMCSField64},
+    0x0000201B: {'name': 'EPT_POINTER_HIGHT', 'c': VMCSField64},
+    0x0000201C: {'name': 'EOI_EXIT0', 'c': VMCSField64},
+    0x0000201D: {'name': 'EOI_EXIT0_HIGH', 'c': VMCSField64},
+    0x0000201E: {'name': 'EOI_EXIT1', 'c': VMCSField64},
+    0x0000201F: {'name': 'EOI_EXIT1_HIGH', 'c': VMCSField64},
+    0x00002020: {'name': 'EOI_EXIT2', 'c': VMCSField64},
+    0x00002021: {'name': 'EOI_EXIT2_HIGH', 'c': VMCSField64},
+    0x00002022: {'name': 'EOI_EXIT3', 'c': VMCSField64},
+    0x00002023: {'name': 'EOI_EXIT3_HIGH', 'c': VMCSField64},
+    0x00002024: {'name': 'EPT_LIST_ADDR', 'c': VMCSField64},
+    0x00002025: {'name': 'EPT_LIST_ADDR_HIGH', 'c': VMCSField64},
+    # 64-Bit Read-Only Data Field
+    0x00002400: {'name': 'GUEST_PHYSICAL_ADDR', 'c': VMCSField64},
+    0x00002401: {'name': 'GUEST_PHYSICAL_ADDR_HIGH', 'c': VMCSField64},
+    # 64-Bit Guest-State Fields
+    0x00002800: {'name': 'GUEST_PHYSICAL_ADDR', 'c': VMCSField64},
+    0x00002801: {'name': 'GUEST_PHYSICAL_ADDR_HIGH', 'c': VMCSField64},
+    0x00002802: {'name': 'VMCS_LINK_POINTER', 'c': VMCSField64},
+    0x00002803: {'name': 'VMCS_LINK_POINTER_HIGH', 'c': VMCSField64},
+    0x00002804: {'name': 'GUEST_IA32_DEBUGCTL', 'c': VMCSField64},
+    0x00002805: {'name': 'GUEST_IA32_DEBUGCTL_HIGH', 'c': VMCSField64},
+    0x00002806: {'name': 'GUEST_IA32_PAT', 'c': VMCSField64},
+    0x00002807: {'name': 'GUEST_IA32_PAT_HIGH', 'c': VMCSField64},
+    0x00002808: {'name': 'GUEST_IA32_EFER', 'c': VMCSField64},
+    0x00002809: {'name': 'GUEST_IA32_EFER_HIGH', 'c': VMCSField64},
+    0x0000280A: {'name': 'GUEST_IA32_PERF_GLOBAL_CTRL', 'c': VMCSField64},
+    0x0000280B: {'name': 'GUEST_IA32_PERF_GLOBAL_CTRL_HIGH', 'c': VMCSField64},
+    0x0000280C: {'name': 'GUEST_PDPTR0', 'c': VMCSField64},
+    0x0000280D: {'name': 'GUEST_PDPTR0_HIGH', 'c': VMCSField64},
+    0x0000280E: {'name': 'GUEST_PDPTR1', 'c': VMCSField64},
+    0x0000280F: {'name': 'GUEST_PDPTR1_HIGH', 'c': VMCSField64},
+    0x00002810: {'name': 'GUEST_PDPTR2', 'c': VMCSField64},
+    0x00002811: {'name': 'GUEST_PDPTR2_HIGH', 'c': VMCSField64},
+    0x00002812: {'name': 'GUEST_PDPTR3', 'c': VMCSField64},
+    0x00002813: {'name': 'GUEST_PDPTR3_HIGH', 'c': VMCSField64},
+    # 64-Bit Host-State Fields
+    0x00002C00: {'name': 'HOST_IA32_PAT', 'c': VMCSField32},
+    0x00002C01: {'name': 'HOST_IA32_PAT_HIGH', 'c': VMCSField32},
+    0x00002C02: {'name': 'HOST_IA32_EFER', 'c': VMCSField32},
+    0x00002C03: {'name': 'HOST_IA32_EFER_HIGH', 'c': VMCSField32},
+    0x00002C04: {'name': 'HOST_IA32_PERF_GLOBAL_CTRL', 'c': VMCSField32},
+    0x00002C05: {'name': 'HOST_IA32_PERF_GLOBAL_CTRL_HIGH', 'c': VMCSField32},
+    # 32-BIT FIELDS
+    # 32-Bit Control Fields
+    0x00004000: {'name': 'PIN_BASED_VM_EXEC_CONTROL', 'c': VMCSField32},
+    0x00004002: {'name': 'CPU_BASED_VM_EXEC_CONTROL', 'c': VMCSField32},
+    0x00004004: {'name': 'EXCEPTION_BITMAP', 'c': VMCSField32},
+    0x00004006: {'name': 'PAGE_FAULT_ERROR_CODE_MASK', 'c': VMCSField32},
+    0x00004008: {'name': 'PAGE_FAULT_ERROR_CODE_MATCH', 'c': VMCSField32},
+    0x0000400A: {'name': 'CR3_TARGET_COUNT', 'c': VMCSField32},
+    0x0000400C: {'name': 'VM_EXIT_CONTROLS', 'c': VMCSField32},
+    0x0000400E: {'name': 'VM_EXIT_MSR_STORE_COUNT', 'c': VMCSField32},
+    0x00004010: {'name': 'VM_EXIT_MSR_LOAD_COUNT', 'c': VMCSField32},
+    0x00004012: {'name': 'VM_ENTRY_CONTROLS', 'c': VMCSField32},
+    0x00004014: {'name': 'VM_ENTRY_MSR_LOAD_COUNT', 'c': VMCSField32},
+    0x00004016: {'name': 'VM_ENTRY_INTR_INFO_FIELD', 'c': VMCSField32},
+    0x00004018: {'name': 'VM_ENTRY_EXCEPTION_ERROR_CODE', 'c': VMCSField32},
+    0x0000401A: {'name': 'VM_ENTRY_INSTRUCTION_LEN', 'c': VMCSField32},
+    0x0000401C: {'name': 'TPR_THRESHOLD', 'c': VMCSField32},
+    0x0000401E: {'name': 'SECONDARY_VM_EXEC_CONTROL', 'c': VMCSField32},
+    0x00004020: {'name': 'PLE_GAP', 'c': VMCSField32},
+    0x00004022: {'name': 'PLE_WINDOW', 'c': VMCSField32},
+    # 32-Bits Read-Only Data Fields
+    0x00004400: {'name': 'VM_INSTRUCTION_ERROR', 'c': VMCSField32},
+    0x00004402: {'name': 'VM_EXIT_REASON', 'c': VMCSField32},
+    0x00004404: {'name': 'VM_EXIT_INTR_INFO', 'c': VMCSField32},
+    0x00004406: {'name': 'VM_EXIT_INTR_ERROR_CODE', 'c': VMCSField32},
+    0x00004408: {'name': 'IDT_VECTORING_INFO_FIELD', 'c': VMCSField32},
+    0x0000440A: {'name': 'IDT_VECTORING_ERROR_CODE', 'c': VMCSField32},
+    0x0000440C: {'name': 'VM_EXIT_INSTRUCTION_LEN', 'c': VMCSField32},
+    0x0000440E: {'name': 'VMX_INSTRUCTION_INFO', 'c': VMCSField32},
+    # 32-Bits Guest-State Fields
+    0x00004800: {'name': 'GUEST_ES_LIMIT', 'c': VMCSField32},
+    0x00004802: {'name': 'GUEST_CS_LIMIT', 'c': VMCSField32},
+    0x00004804: {'name': 'GUEST_SS_LIMIT', 'c': VMCSField32},
+    0x00004806: {'name': 'GUEST_DS_LIMIT', 'c': VMCSField32},
+    0x00004808: {'name': 'GUEST_FS_LIMIT', 'c': VMCSField32},
+    0x0000480A: {'name': 'GUEST_GS_LIMIT', 'c': VMCSField32},
+    0x0000480C: {'name': 'GUEST_LDTR_LIMIT', 'c': VMCSField32},
+    0x0000480E: {'name': 'GUEST_TR_LIMIT', 'c': VMCSField32},
+    0x00004810: {'name': 'GUEST_GDTR_LIMIT', 'c': VMCSField32},
+    0x00004812: {'name': 'GUEST_IDTR_LIMIT', 'c': VMCSField32},
+    0x00004814: {'name': 'GUEST_ES_AR_BYTES', 'c': VMCSField32},
+    0x00004816: {'name': 'GUEST_CS_AR_BYTES', 'c': VMCSField32},
+    0x00004818: {'name': 'GUEST_SS_AR_BYTES', 'c': VMCSField32},
+    0x0000481A: {'name': 'GUEST_DS_AR_BYTES', 'c': VMCSField32},
+    0x0000481C: {'name': 'GUEST_FS_AR_BYTES', 'c': VMCSField32},
+    0x0000481E: {'name': 'GUEST_GS_AR_BYTES', 'c': VMCSField32},
+    0x00004820: {'name': 'GUEST_LDTR_AR_BYTES', 'c': VMCSField32},
+    0x00004822: {'name': 'GUEST_TR_AR_BYTES', 'c': VMCSField32},
+    0x00004824: {'name': 'GUEST_INTERRUPTIBILITY_INFO', 'c': VMCSField32},
+    0x00004826: {'name': 'GUEST_ACTIVITY_STATE', 'c': VMCSField32},
+    0x00004828: {'name': 'GUEST_SMBASE', 'c': VMCSField32},
+    0x0000482A: {'name': 'GUEST_SYSENTER_CS', 'c': VMCSField32},
+    0x0000482E: {'name': 'VMX_PREEMPTION_TIMER_VALUE', 'c': VMCSField32},
+    # 32-Bits Host-State Fields
+    0x00004C00: {'name': 'HOST_IA32_SYSENTER_CS', 'c': VMCSField32},
+    # NATURAL-WIDTH FIELDS
+    # Natural-Width Control Fields
+    0x00006000: {'name': 'CR0_GUEST_HOST_MASK', 'c': VMCSFieldNW},
+    0x00006002: {'name': 'CR4_GUEST_HOST_MASK', 'c': VMCSFieldNW},
+    0x00006004: {'name': 'CR0_READ_SHADOW', 'c': VMCSFieldNW},
+    0x00006006: {'name': 'CR4_READ_SHADOW', 'c': VMCSFieldNW},
+    0x00006008: {'name': 'CR3_TARGET_VALUE0', 'c': VMCSFieldNW},
+    0x0000600a: {'name': 'CR3_TARGET_VALUE1', 'c': VMCSFieldNW},
+    0x0000600c: {'name': 'CR3_TARGET_VALUE2', 'c': VMCSFieldNW},
+    0x0000600e: {'name': 'CR3_TARGET_VALUE3', 'c': VMCSFieldNW},
+    # Natural-Width Read-Only Data Fields
+    0x00006400: {'name': 'EXIT_QUALIFICATION', 'c': VMCSFieldNW},
+    0x00006402: {'name': 'IO_RCX', 'c': VMCSFieldNW},
+    0x00006404: {'name': 'IO_RSI', 'c': VMCSFieldNW},
+    0x00006406: {'name': 'IO_RDI', 'c': VMCSFieldNW},
+    0x00006408: {'name': 'IO_RIP', 'c': VMCSFieldNW},
+    0x0000640a: {'name': 'GUEST_LINEAR_ADDRESS', 'c': VMCSFieldNW},
+    # Natural-Width Guest-State Fields
+    0x00006800: {'name': 'GUEST_CR0', 'c': VMCSFieldNW},
+    0x00006802: {'name': 'GUEST_CR3', 'c': VMCSFieldNW},
+    0x00006804: {'name': 'GUEST_CR4', 'c': VMCSFieldNW},
+    0x00006806: {'name': 'GUEST_ES_BASE', 'c': VMCSFieldNW},
+    0x00006808: {'name': 'GUEST_CS_BASE', 'c': VMCSFieldNW},
+    0x0000680a: {'name': 'GUEST_SS_BASE', 'c': VMCSFieldNW},
+    0x0000680c: {'name': 'GUEST_DS_BASE', 'c': VMCSFieldNW},
+    0x0000680e: {'name': 'GUEST_FS_BASE', 'c': VMCSFieldNW},
+    0x00006810: {'name': 'GUEST_GS_BASE', 'c': VMCSFieldNW},
+    0x00006812: {'name': 'GUEST_LDTR_BASE', 'c': VMCSFieldNW},
+    0x00006814: {'name': 'GUEST_TR_BASE', 'c': VMCSFieldNW},
+    0x00006816: {'name': 'GUEST_GDTR_BASE', 'c': VMCSFieldNW},
+    0x00006818: {'name': 'GUEST_IDTR_BASE', 'c': VMCSFieldNW},
+    0x0000681a: {'name': 'GUEST_DR7', 'c': VMCSFieldNW},
+    0x0000681c: {'name': 'GUEST_RSP', 'c': VMCSFieldNW},
+    0x0000681e: {'name': 'GUEST_RIP', 'c': VMCSFieldNW},
+    0x00006820: {'name': 'GUEST_RFLAGS', 'c': VMCSFieldNW},
+    0x00006822: {'name': 'GUEST_PENDING_DBG_EXCEPTIONS', 'c': VMCSFieldNW},
+    0x00006824: {'name': 'GUEST_SYSENTER_ESP', 'c': VMCSFieldNW},
+    0x00006826: {'name': 'GUEST_SYSENTER_EIP', 'c': VMCSFieldNW},
+    # Natural-Width Host-State Fields
+    0x00006c00: {'name': 'HOST_CR0', 'c': VMCSFieldNW},
+    0x00006c02: {'name': 'HOST_CR3', 'c': VMCSFieldNW},
+    0x00006c04: {'name': 'HOST_CR4', 'c': VMCSFieldNW},
+    0x00006c06: {'name': 'HOST_FS_BASE', 'c': VMCSFieldNW},
+    0x00006c08: {'name': 'HOST_GS_BASE', 'c': VMCSFieldNW},
+    0x00006c0a: {'name': 'HOST_TR_BASE', 'c': VMCSFieldNW},
+    0x00006c0c: {'name': 'HOST_GDTR_BASE', 'c': VMCSFieldNW},
+    0x00006c0e: {'name': 'HOST_IDTR_BASE', 'c': VMCSFieldNW},
+    0x00006c10: {'name': 'HOST_IA32_SYSENTER_ESP', 'c': VMCSFieldNW},
+    0x00006c12: {'name': 'HOST_IA32_SYSENTER_EIP', 'c': VMCSFieldNW},
+    0x00006c14: {'name': 'HOST_RSP', 'c': VMCSFieldNW},
+    0x00006c16: {'name': 'HOST_RIP', 'c': VMCSFieldNW},
+  }

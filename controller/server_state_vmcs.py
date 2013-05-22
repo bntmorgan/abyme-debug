@@ -13,13 +13,12 @@ class CommandVMCS(Command):
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def submit(self):
     self.sendVMCSRequest()
-    # self.changeState(ServerStateWriteReply(self.debugClient))
-    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+    self.changeState(ServerStateVMCSReadReply(self.debugClient))
   def sendVMCSRequest(self):
     self.usage()
   def complete(self, t):
     # self.debugClient.vmcs.fields
-    c = [k for k,v in self.debugClient.vmcs.fields.iteritems() if k.startswith(t)]
+    c = [k for k, v in self.debugClient.vmcs.fields.iteritems() if k.startswith(t)]
     s = ''
     for k in c:
       s = s + k + '\n'
@@ -27,3 +26,16 @@ class CommandVMCS(Command):
     return c
   def usage(self):
     self.debugClient.gui.display("Usage()\n type a VMCS Field name and carriage return")
+
+class ServerStateVMCSReadReply(ServerState):
+  def __init__(self, debugClient):
+    self.debugClient = debugClient
+  def notifyUserInput(self, input):
+    self.usage()
+  def notifyMessage(self, message):
+    if not isinstance(message, MessageMemoryData):
+      raise BadReply
+    self.debugClient.addMessage(message)
+    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+  def usage(self):
+    self.debugClient.gui.display("Usage()\n Waiting for the VMCS Fields response")

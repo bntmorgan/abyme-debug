@@ -11,6 +11,10 @@ class BadMessage(BaseException):
   def __str__(self):
     return "Bad message usage"
 
+class BadVMCSFieldSize(BaseException):
+  def __str__(self):
+    return "Bad message usage"
+
 class Message(object):
   # Message Types
   (
@@ -30,7 +34,10 @@ class Message(object):
   ) = range(13)
   def __init__(self):
     self.messageType = Message.Message
+    # GUI
+    self.number = 0
     self.coreNumber = 0
+    self.frame = None
   def unPack(self):
     t = unpack('BB', self.frame.payload[0:2])
     self.messageType = t[0]
@@ -92,8 +99,6 @@ Input messages
 class MessageIn(Message):
   def __init__(self):
     Message.__init__(self)
-    # GUI
-    self.number = 0
 
 class MessageVMExit(MessageIn):
   def __init__(self):
@@ -176,12 +181,36 @@ class MessageVMCSData(MessageIn):
   def __init__(self):
     MessageIn.__init__(self)
     self.messageType = Message.MemoryVMCSData
+    self.vmcs = None
+    # Received fields for display purpose
+    self.fields = {}
   def unPack(self):
     MessageIn.unPack(self)
+    # Copy the VMCS Fields
+    data = self.frame.payload[2:]
+    s = unpack("B", data[0])
+    while s > 0:
+      s = unpack("B", data[0])
+      e = unpack("Q", data[1:9])
+      v = 0
+      if s == 2:
+        v = unpack("H", data[9:11])
+      elif s == 4:
+        v = unpack("L", data[9:13])
+      elif s == 8:
+        v = unpack("Q", data[9:17])
+      else:
+        raise BadVMCSFieldSize()
+    f = Encoding.e[e]['c'](e)
+    f.value = v
+    self.fields[f.name] = f
   def format(self):
     return "%s VMCSData" % (MessageIn.format(self))
   def formatFull(self):
-    return MessageIn.formatFull(self)
+    s = ''
+    for k, f in self.fields:
+      s = s + f.format() + "\n"
+    return MessageIn.formatFull(self) + s
 
 '''
 Output messages
