@@ -29,6 +29,7 @@ class CommandDump(Command):
     self.debugClient.addMessage(m)
   def complete(self, t):
     self.usage()
+    return []
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address and size 0xffffffff 0x1000 and carriage return")
 

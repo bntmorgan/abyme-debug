@@ -51,6 +51,8 @@ class ServerStateMinibuf(ServerState):
       self.usage()
   def changed(self, widget, text):
     self.debugClient.gui.display('Typed : %s' % (text))
+  def setText(self, t):
+    self.input.set_edit_text(t)
   def validate(self, t):
     raise NotImplementedError("Subclasses should implement this!")
   def complete(self, t):

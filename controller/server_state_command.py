@@ -23,24 +23,56 @@ class ServerStateCommand(ServerStateMinibuf):
     ServerStateMinibuf.__init__(self, debugClient, u" : ")
     self.command = None
     self.args = None
+    # autocomplete
+    self.cString = ''
+    self.cValues = []
+    self.cIndex = 0
+    self.c = 0
   def submit(self):
     if self.command is not None:
       self.command.submit()
   def cancel(self):
     if self.command is not None:
       self.command.cancel()
+    else:
+      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+    self.debugClient.gui.setMinibuf('')
   def validate(self, t):
-    self.getCommand(t)
-    if self.command is not None:
-      return self.command.validate(self.args)
+    if self.c == 1:
+      p = self.cString.split(" ")
+      s = " ".join(p[:len(p) - 1]) + " %s " % (self.cValues[len(self.cValues) - 1 if self.cIndex == 0 else self.cIndex - 1])
+      self.setText(s)
+      self.cString = ''
+      self.cValues = []
+      self.cIndex = 0
+      self.c = 0
+      self.debugClient.gui.setMinibuf('')
     else:
-      return 0
+      self.getCommand(t)
+      if self.command is not None:
+        return self.command.validate(self.args)
+      else:
+        return 0
   def complete(self, t):
-    self.getCommand(t)
-    if self.command is not None:
-      self.command.complete(self.args)
+    if self.cString == t and len(self.cValues) > 0:
+      self.debugClient.gui.setMinibuf(self.cValues[self.cIndex])
+      self.cIndex = 0 if self.cIndex == len(self.cValues) - 1 else self.cIndex + 1
+      self.c = 1
     else:
-      self.usage()
+      self.cString = t
+      self.cIndex = 0
+      self.c = 0
+      self.getCommand(t)
+      if self.command is not None:
+        self.cValues = self.command.complete(self.args)
+      else:
+        self.cValues = [
+            "write",
+            "read",
+            "vmcs read",
+            "<line>",
+        ]
+        self.usage()
   def usage(self):
     if self.command is not None:
       self.command.usage()
