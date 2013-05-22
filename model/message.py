@@ -180,7 +180,7 @@ class MessageUnhandledVMExit(MessageVMExit):
 class MessageVMCSData(MessageIn):
   def __init__(self):
     MessageIn.__init__(self)
-    self.messageType = Message.MemoryVMCSData
+    self.messageType = Message.VMCSData
     self.vmcs = None
     # Received fields for display purpose
     self.fields = {}
@@ -265,19 +265,16 @@ class MessageCoreRegsRead(MessageOut):
     return "%s CoreRegsRead" % (MessageOut.format(self))
 
 class MessageVMCSRead(MessageOut):
-  def __init__(self):
-    MessageOut.__init__(self, fields = [], vmcs = None)
-    self.messageType = Message.MemoryVMCSData
+  def __init__(self, fields = []):
+    MessageOut.__init__(self)
+    self.messageType = Message.VMCSRead
     self.fields = fields
-    self.vmcs = vmcs
-    if self.vmcs == None:
-      raise BadMessage()
   def pack(self):
     s = MessageOut.pack(self)
     for f in self.fields:
-      t = pack('B', self.vmcs.fields[f].length)
+      t = pack('B', f.length)
       s = s + t
-      t = pack('Q', self.vmcs.fields[f].encoding)
+      t = pack('Q', f.encoding)
       s = s + t
     # Mark the end of message
     t = pack('B', 0)

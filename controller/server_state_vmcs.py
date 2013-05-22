@@ -7,7 +7,12 @@ from model.message import *
 class CommandVMCS(Command): 
   def __init__(self, debugClient):
     Command.__init__(self, debugClient)
+    self.f = None
   def validate(self, t):
+    try:
+      self.f = self.debugClient.vmcs.fields[t.strip()]
+    except:
+      return 0
     return 1
   def cancel(self):
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
@@ -15,7 +20,9 @@ class CommandVMCS(Command):
     self.sendVMCSRequest()
     self.changeState(ServerStateVMCSReadReply(self.debugClient))
   def sendVMCSRequest(self):
-    self.usage()
+    m = MessageVMCSRead([self.f])
+    self.debugClient.network.send(m)
+    self.debugClient.addMessage(m)
   def complete(self, t):
     # self.debugClient.vmcs.fields
     c = [k for k, v in self.debugClient.vmcs.fields.iteritems() if k.startswith(t)]
