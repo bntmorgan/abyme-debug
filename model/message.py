@@ -196,7 +196,7 @@ class MessageVMCSData(MessageIn):
       if s == 2:
         v = unpack("H", data[9:11])
       elif s == 4:
-        v = unpack("L", data[9:13])
+        v = unpack("I", data[9:13])
       elif s == 8:
         v = unpack("Q", data[9:17])
       else:
