@@ -4,6 +4,8 @@ class VMCSField(object):
     self.encoding = 0
     self.name = ''
     self.value = 0
+  def format(self):
+    return self.name + '(' + '0x%x' % (self.encoding) + ') : ' + '0x%x' % (self.value)
 
 class VMCSField16(VMCSField):
   def __init__(self, encoding):

@@ -2,6 +2,7 @@ from struct import *
 
 import socket, sys, math
 from model.core import Core
+from model.vmcs import Encoding
 
 '''
 Message
@@ -188,29 +189,30 @@ class MessageVMCSData(MessageIn):
     MessageIn.unPack(self)
     # Copy the VMCS Fields
     data = self.frame.payload[2:]
-    s = unpack("B", data[0])
+    s = unpack("B", data[0])[0]
     while s > 0:
-      s = unpack("B", data[0])
-      e = unpack("Q", data[1:9])
+      e = unpack("Q", data[1:9])[0]
       v = 0
       if s == 2:
-        v = unpack("H", data[9:11])
+        v = unpack("H", data[9:11])[0]
       elif s == 4:
-        v = unpack("I", data[9:13])
+        v = unpack("I", data[9:13])[0]
       elif s == 8:
-        v = unpack("Q", data[9:17])
+        v = unpack("Q", data[9:17])[0]
       else:
         raise BadVMCSFieldSize()
-    f = Encoding.e[e]['c'](e)
-    f.value = v
-    self.fields[f.name] = f
+      data = data[1 + 8 + s:]
+      s = unpack("B", data[0])[0]
+      f = Encoding.e[e]['c'](e)
+      f.value = v
+      self.fields[f.name] = f
   def format(self):
     return "%s VMCSData" % (MessageIn.format(self))
   def formatFull(self):
     s = ''
-    for k, f in self.fields:
+    for k, f in self.fields.iteritems():
       s = s + f.format() + "\n"
-    return MessageIn.formatFull(self) + s
+    return MessageIn.formatFull(self) + '\n' + s
 
 '''
 Output messages

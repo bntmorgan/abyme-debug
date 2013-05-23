@@ -40,7 +40,7 @@ class ServerStateVMCSReadReply(ServerState):
   def notifyUserInput(self, input):
     self.usage()
   def notifyMessage(self, message):
-    if not isinstance(message, MessageMemoryData):
+    if not isinstance(message, MessageVMCSData):
       raise BadReply
     self.debugClient.addMessage(message)
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
