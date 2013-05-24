@@ -53,11 +53,6 @@ class DebugClient():
     self.addMessage(m)
   def notifyUserInput(self, input):
     self.serverState.notifyUserInput(input)
-  def setWait(self):
-    self.wait = 1
-  def endWait(self):
-    self.wait = 0
-    self.sendContinue()
   def setStep(self):
     self.step = 1
     self.gui.setStep()
