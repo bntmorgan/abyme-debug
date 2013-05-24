@@ -1,4 +1,4 @@
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf
+from controller.server_state import ServerState, BadReply, ServerStateReply
 import controller.server_state_waiting
 from model.message import *
 
