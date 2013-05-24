@@ -63,22 +63,22 @@ class ServerStateMinibuf(ServerState):
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")
 
-class ServerStateMinibufCommand(ServerStateMinibuf):
-  def __init__(self, debugClient, label, command):
+class ServerStateMinibufShell(ServerStateMinibuf):
+  def __init__(self, debugClient, label, shell):
     ServerStateMinibuf.__init__(self, debugClient, label)
-    self.command = command
+    self.shell = shell
   def submit(self):
-    self.command.submit()
+    self.shell.submit()
   def cancel(self):
-    self.command.cancel()
+    self.shell.cancel()
   def validate(self, t):
-    return self.command.validate(t)
+    return self.shell.validate(t)
   def usage(self):
-    self.command.usage()
+    self.shell.usage()
   def complete(self, t):
-    self.command.complete(t)
+    self.shell.complete(t)
 
-class Command(object):
+class Shell(object):
   def __init__(self, debugClient):
     self.debugClient = debugClient
   def validate(self, t):

@@ -15,7 +15,6 @@ class ServerStateRegs(ServerState):
   def notifyMessage(self, message):
     if not isinstance(message, MessageCoreRegsData):
       raise BadReply
-    self.debugClient.addMessage(message)
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def usage(self):
     self.debugClient.gui.display("Usage()\n Waiting for the memory response")

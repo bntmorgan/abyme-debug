@@ -1,10 +1,10 @@
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Command
+from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Shell
 import controller.server_state_waiting
 from model.message import *
 
-class CommandDump(Command):
+class ShellDump(Shell):
   def __init__(self, debugClient):
-    Command.__init__(self, debugClient)
+    Shell.__init__(self, debugClient)
     # Memory request values
     self.address = 0
     self.length = 0
@@ -41,7 +41,6 @@ class ServerStateDumpReply(ServerState):
   def notifyMessage(self, message):
     if not isinstance(message, MessageMemoryData):
       raise BadReply
-    self.debugClient.addMessage(message)
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def usage(self):
     self.debugClient.gui.display("Usage()\n Waiting for the memory response")

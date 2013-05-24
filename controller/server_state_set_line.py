@@ -1,10 +1,10 @@
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Command
+from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Shell
 import controller.server_state_waiting
 from model.message import *
 
-class CommandSetLine(Command):
+class ShellSetLine(Shell):
   def __init__(self, debugClient):
-    Command.__init__(self, debugClient)
+    Shell.__init__(self, debugClient)
     self.line = 0
   def validate(self, t):
     try:

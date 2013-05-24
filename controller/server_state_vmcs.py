@@ -1,12 +1,12 @@
 import urwid
 
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Command
+from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Shell
 import controller.server_state_waiting
 from model.message import *
 
-class CommandVMCS(Command): 
+class ShellVMCS(Shell): 
   def __init__(self, debugClient):
-    Command.__init__(self, debugClient)
+    Shell.__init__(self, debugClient)
     self.f = None
   def validate(self, t):
     try:
@@ -42,7 +42,6 @@ class ServerStateVMCSReadReply(ServerState):
   def notifyMessage(self, message):
     if not isinstance(message, MessageVMCSData):
       raise BadReply
-    self.debugClient.addMessage(message)
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def usage(self):
     self.debugClient.gui.display("Usage()\n Waiting for the VMCS Fields response")

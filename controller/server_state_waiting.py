@@ -1,12 +1,12 @@
 import urwid
 
-from controller.server_state import ServerState, BadReply, ServerStateMinibufCommand
+from controller.server_state import ServerState, BadReply, ServerStateMinibufShell
 import controller.server_state_running
 import controller.server_state_dump
 import controller.server_state_write
 import controller.server_state_set_line
 import controller.server_state_regs
-import controller.server_state_command
+import controller.server_state_shell
 import model.message
 from model.bin import Bin
 
@@ -38,13 +38,13 @@ class ServerStateWaiting(ServerState):
       else:
         self.debugClient.setMTF()
     elif input == 'r':
-      self.changeState(ServerStateMinibufCommand(self.debugClient, 
+      self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address length : ",
-        controller.server_state_dump.CommandDump(self.debugClient)))
+        controller.server_state_dump.ShellDump(self.debugClient)))
     elif input == 'w':
-      self.changeState(ServerStateMinibufCommand(self.debugClient, 
+      self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address data : ",
-        controller.server_state_write.CommandWrite(self.debugClient)))
+        controller.server_state_write.ShellWrite(self.debugClient)))
     elif input == 'd':
       if len(self.debugClient.messages) == 0:
         return
@@ -59,7 +59,7 @@ class ServerStateWaiting(ServerState):
       m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
       self.debugClient.gui.display(m.formatFull())
     elif input == ':':
-      self.changeState(controller.server_state_command.ServerStateCommand(self.debugClient))
+      self.changeState(controller.server_state_shell.ServerStateShell(self.debugClient))
     elif input == 'R':
       self.changeState(controller.server_state_regs.ServerStateRegs(self.debugClient))
     else:

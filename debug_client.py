@@ -46,6 +46,7 @@ class DebugClient():
     self.gui.run()
   def notifyMessage(self, message):
     self.serverState.notifyMessage(message)
+    self.addMessage(message)
   def sendContinue(self):
     m = MessageExecContinue()
     self.network.send(m)

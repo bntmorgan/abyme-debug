@@ -1,4 +1,4 @@
-from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Command
+from controller.server_state import ServerState, BadReply, ServerStateMinibuf, Shell
 import controller.server_state_waiting
 import controller.server_state_set_line
 import controller.server_state_dump
@@ -18,10 +18,10 @@ class TestRegex(object):
     self.m = re.match(p, t)
     return self.m
 
-class ServerStateCommand(ServerStateMinibuf):
+class ServerStateShell(ServerStateMinibuf):
   def __init__(self, debugClient):
     ServerStateMinibuf.__init__(self, debugClient, u" : ")
-    self.command = None
+    self.shell = None
     self.args = None
     # autocomplete
     self.cString = ''
@@ -29,11 +29,11 @@ class ServerStateCommand(ServerStateMinibuf):
     self.cIndex = 0
     self.c = 0
   def submit(self):
-    if self.command is not None:
-      self.command.submit()
+    if self.shell is not None:
+      self.shell.submit()
   def cancel(self):
-    if self.command is not None:
-      self.command.cancel()
+    if self.shell is not None:
+      self.shell.cancel()
     else:
       self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
     self.debugClient.gui.setMinibuf('')
@@ -48,9 +48,9 @@ class ServerStateCommand(ServerStateMinibuf):
       self.c = 0
       self.debugClient.gui.setMinibuf('')
     else:
-      self.getCommand(t)
-      if self.command is not None:
-        return self.command.validate(self.args)
+      self.getShell(t)
+      if self.shell is not None:
+        return self.shell.validate(self.args)
       else:
         return 0
   def complete(self, t):
@@ -61,10 +61,10 @@ class ServerStateCommand(ServerStateMinibuf):
     else:
       self.cIndex = 0
       self.c = 0
-      self.getCommand(t)
-      if self.command is not None:
+      self.getShell(t)
+      if self.shell is not None:
         self.cString = t
-        self.cValues = self.command.complete(self.args)
+        self.cValues = self.shell.complete(self.args)
       else:
         self.cString = ""
         self.setText("")
@@ -76,24 +76,24 @@ class ServerStateCommand(ServerStateMinibuf):
         ]
         self.usage()
   def usage(self):
-    if self.command is not None:
-      self.command.usage()
+    if self.shell is not None:
+      self.shell.usage()
     else:
       self.debugClient.gui.display("write\nread\nvmcs read\n<line>")
-  def getCommand(self, t):
-    self.command = None
+  def getShell(self, t):
+    self.shell = None
     self.args = t
     test = TestRegex()
     if test.test("^[ ]*write (.*)$", t):
-      self.command = controller.server_state_write.CommandWrite(self.debugClient)
+      self.shell = controller.server_state_write.ShellWrite(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^[ ]*read (.*)$", t):
-      self.command = controller.server_state_dump.CommandDump(self.debugClient)
+      self.shell = controller.server_state_dump.ShellDump(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^[ ]*vmcs read (.*)$", t):
-      self.command = controller.server_state_vmcs.CommandVMCS(self.debugClient)
+      self.shell = controller.server_state_vmcs.ShellVMCS(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^.*[0-9]+.*$", t):
-      self.command = controller.server_state_set_line.CommandSetLine(self.debugClient)
+      self.shell = controller.server_state_set_line.ShellSetLine(self.debugClient)
     else:
-      self.command = None
+      self.shell = None
