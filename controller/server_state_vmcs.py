@@ -34,14 +34,8 @@ class ShellVMCS(Shell):
   def usage(self):
     self.debugClient.gui.display("Usage()\n type a VMCS Field name and carriage return")
 
-class ServerStateVMCSReadReply(ServerState):
-  def __init__(self, debugClient):
-    self.debugClient = debugClient
-  def notifyUserInput(self, input):
-    self.usage()
+class ServerStateVMCSReadReply(ServerStateReply):
   def notifyMessage(self, message):
     if not isinstance(message, MessageVMCSData):
       raise BadReply
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
-  def usage(self):
-    self.debugClient.gui.display("Usage()\n Waiting for the VMCS Fields response")

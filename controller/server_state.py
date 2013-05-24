@@ -93,3 +93,14 @@ class Shell(object):
     raise NotImplementedError("Subclasses should implement this!")
   def changeState(self, state):
     self.debugClient.serverState.changeState(state)
+
+class ServerStateReply(ServerState):
+  def __init__(self, debugClient):
+    self.debugClient = debugClient
+  def notifyUserInput(self, input):
+    if (input == 'esc'):
+      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+    else:
+      self.usage()
+  def usage(self):
+    self.debugClient.gui.display("Usage()\n Waiting for response... Press escape to stop")

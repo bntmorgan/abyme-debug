@@ -35,14 +35,8 @@ class ShellWrite(Shell):
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address, some data to write 0xffffffff 0x1000 and carriage return")
 
-class ServerStateWriteReply(ServerState):
-  def __init__(self, debugClient):
-    self.debugClient = debugClient
-  def notifyUserInput(self, input):
-    self.usage()
+class ServerStateWriteReply(ServerStateReply):
   def notifyMessage(self, message):
     if not isinstance(message, MessageMemoryWriteCommit):
       raise BadReply
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
-  def usage(self):
-    self.debugClient.gui.display("Usage()\n Waiting for the memory response")

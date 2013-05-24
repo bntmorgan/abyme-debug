@@ -33,14 +33,8 @@ class ShellDump(Shell):
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address and size 0xffffffff 0x1000 and carriage return")
 
-class ServerStateDumpReply(ServerState):
-  def __init__(self, debugClient):
-    self.debugClient = debugClient
-  def notifyUserInput(self, input):
-    self.usage()
+class ServerStateDumpReply(ServerStateReply):
   def notifyMessage(self, message):
     if not isinstance(message, MessageMemoryData):
       raise BadReply
     self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
-  def usage(self):
-    self.debugClient.gui.display("Usage()\n Waiting for the memory response")
