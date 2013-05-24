@@ -49,7 +49,7 @@ class MessageInfo(Message):
     self.label = label
     self.message = message
   def format(self):
-    return Message.format(self) + ' ' * 43 + "Info : " + self.label
+    return Message.format(self) + '-' * 42 + " Info : " + self.label
   def formatFull(self):
     return Message.formatFull(self) + self.message
 
