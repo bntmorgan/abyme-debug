@@ -10,14 +10,15 @@ class Command(object):
 
 class ServerStateCommand(ServerStateReply):
   def __init__(self, debugClient, command):
-    ServerStateReply.__init__(self)
+    ServerStateReply.__init__(self, debugClient)
     self.command = command
-    # Execute command
-    if not self.command.execute():
-      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient)
   def notifyMessage(self, message):
     # Execute command
     self.command.message = message
     if not self.command.execute():
-      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient)
+      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
     self.command.message = None
+  def start(self):
+    # Execute command
+    if not self.command.execute():
+      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))

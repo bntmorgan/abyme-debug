@@ -34,7 +34,5 @@ class ServerStateRunning(ServerState):
         self.debugClient.sendContinue()
     else:
       raise BadReply(message.messageType)
-    # Adds here to the model and notifies the view of the changes
-    self.debugClient.addMessage(message)
   def usage(self):
     self.debugClient.gui.display("Usage()\nq : Quit\ns : Step execution\nf : Force waiting state (if VMM already waiting)")

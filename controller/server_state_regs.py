@@ -8,8 +8,7 @@ class ServerStateRegs(ServerStateReply):
     self.sendRegsRequest()
   def sendRegsRequest(self):
     m = MessageCoreRegsRead()
-    self.debugClient.network.send(m)
-    self.debugClient.addMessage(m)
+    self.debugClient.sendMessage(m)
   def notifyMessage(self, message):
     if not isinstance(message, MessageCoreRegsData):
       raise BadReply

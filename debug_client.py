@@ -45,7 +45,10 @@ class DebugClient():
     self.createComponents()
     self.gui.run()
   def notifyMessage(self, message):
+    self.addMessage(message)
     self.serverState.notifyMessage(message)
+  def sendMessage(self, message):
+    self.network.send(message)
     self.addMessage(message)
   def sendContinue(self):
     m = MessageExecContinue()
@@ -71,6 +74,8 @@ class DebugClient():
     # Adds here to the model and notifies the view of the changes
     self.gui.notifyMessage(message)
     self.gui.messageFocus(message.number)
+  def info(self, label, text):
+    self.addMessage(MessageInfo(label, text))
 
 
 # Debug client main

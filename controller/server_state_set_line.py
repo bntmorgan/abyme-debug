@@ -12,8 +12,6 @@ class ShellSetLine(Shell):
     except:
       return 0
     return 1
-  def cancel(self):
-    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def submit(self):
     # set line
     self.debugClient.gui.messageFocus(self.line)

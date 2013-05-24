@@ -20,15 +20,12 @@ class ShellWrite(Shell):
     except:
       return 0
     return 1
-  def cancel(self):
-    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def submit(self):
     self.sendMemoryRequest()
     self.changeState(ServerStateWriteReply(self.debugClient))
   def sendMemoryRequest(self):
     m = MessageMemoryWrite(self.address, self.data)
-    self.debugClient.network.send(m)
-    self.debugClient.addMessage(m)
+    self.debugClient.sendMessage(m)
   def complete(self, t):
     self.usage()
     return []

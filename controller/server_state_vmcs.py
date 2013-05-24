@@ -14,15 +14,12 @@ class ShellVMCS(Shell):
     except:
       return 0
     return 1
-  def cancel(self):
-    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def submit(self):
     self.sendVMCSRequest()
     self.changeState(ServerStateVMCSReadReply(self.debugClient))
   def sendVMCSRequest(self):
     m = MessageVMCSRead([self.f])
-    self.debugClient.network.send(m)
-    self.debugClient.addMessage(m)
+    self.debugClient.sendMessage(m)
   def complete(self, t):
     # self.debugClient.vmcs.fields
     c = [k for k, v in self.debugClient.vmcs.fields.iteritems() if k.startswith(t)]

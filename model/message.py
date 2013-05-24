@@ -38,6 +38,24 @@ class Message(object):
     # GUI
     self.number = 0
     self.coreNumber = 0
+  def format(self):
+    return "%04d %d " % (self.number, self.coreNumber)
+  def formatFull(self):
+    return "number : %04d\ncore : %d\n" % (self.number, self.coreNumber)
+
+class MessageInfo(Message):
+  def __init__(self, label, message):
+    Message.__init__(self)
+    self.label = label
+    self.message = message
+  def format(self):
+    return Message.format(self) + ' ' * 43 + "Info : " + self.label
+  def formatFull(self):
+    return Message.formatFull(self) + self.message
+
+class MessageNetwork(Message):
+  def __init__(self):
+    Message.__init__(self)
     self.frame = None
   def unPack(self):
     t = unpack('BB', self.frame.payload[0:2])
@@ -52,11 +70,11 @@ class Message(object):
   def format(self):
     l = "%04d B" % (len(self.frame.payload))
     # new length addrSource addrDest type
-    return "%04d %d %s %s %s" % (self.number, self.coreNumber, l, Message.ethAddr(self.frame.macSource), Message.ethAddr(self.frame.macDest))
+    return Message.format(self) + "%s %s %s" % (l, MessageNetwork.ethAddr(self.frame.macSource), MessageNetwork.ethAddr(self.frame.macDest))
   def formatFull(self):
     l = "%04d B" % (len(self.frame.payload))
     # new length addrSource addrDest type
-    return "number : %04d\ncore : %d\nlength : %s\nsrc address : %s\ndest address : %s" % (self.number, self.coreNumber, l, MessageIn.ethAddr(self.frame.macSource), MessageIn.ethAddr(self.frame.macDest))
+    return Message.formatFull(self) + "length : %s\nsrc address : %s\ndest address : %s" % (l, MessageNetwork.ethAddr(self.frame.macSource), MessageNetwork.ethAddr(self.frame.macDest))
   @staticmethod
   def createMessage(frame):
     # get the type of the message
@@ -93,13 +111,14 @@ class Message(object):
     m.unPack()
     return m
 
+
 '''
 Input messages
 '''
 
-class MessageIn(Message):
+class MessageIn(MessageNetwork):
   def __init__(self):
-    Message.__init__(self)
+    MessageNetwork.__init__(self)
 
 class MessageVMExit(MessageIn):
   def __init__(self):
@@ -218,9 +237,9 @@ class MessageVMCSData(MessageIn):
 Output messages
 '''
 
-class MessageOut(Message):
+class MessageOut(MessageNetwork):
   def __init__(self):
-    Message.__init__(self)
+    MessageNetwork.__init__(self)
 
 class MessageExecContinue(MessageOut):
   def __init__(self):

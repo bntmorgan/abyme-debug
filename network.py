@@ -52,7 +52,7 @@ class Network():
     packet = packet[0]
     frame = EthernetFrame(packet)
     if (frame.protocol == self.ethertype):
-      self.debugClient.notifyMessage(Message.createMessage(frame))
+      self.debugClient.notifyMessage(MessageNetwork.createMessage(frame))
       return 1
     return 0
   def send(self, message):

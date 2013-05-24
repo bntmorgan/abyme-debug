@@ -16,17 +16,14 @@ class ShellDump(Shell):
       self.address = int(t[0], 0)
       self.length = int(t[1], 0)
     except:
-      return
+      return 0
     return 1
-  def cancel(self):
-    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
   def submit(self):
     self.sendMemoryRequest()
     self.changeState(ServerStateDumpReply(self.debugClient))
   def sendMemoryRequest(self):
     m = MessageMemoryRead(self.address, self.length)
-    self.debugClient.network.send(m)
-    self.debugClient.addMessage(m)
+    self.debugClient.sendMessage(m)
   def complete(self, t):
     self.usage()
     return []

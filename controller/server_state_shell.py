@@ -4,6 +4,7 @@ import controller.server_state_set_line
 import controller.server_state_dump
 import controller.server_state_write
 import controller.server_state_vmcs
+import controller.linear_to_physical
 import re
 from model.message import *
 
@@ -34,8 +35,7 @@ class ServerStateShell(ServerStateMinibuf):
   def cancel(self):
     if self.shell is not None:
       self.shell.cancel()
-    else:
-      self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
+    self.changeState(controller.server_state_waiting.ServerStateWaiting(self.debugClient))
     self.debugClient.gui.setMinibuf('')
   def validate(self, t):
     if self.c == 1:
@@ -72,6 +72,7 @@ class ServerStateShell(ServerStateMinibuf):
             "write",
             "read",
             "vmcs read",
+            "walk",
             "<line>",
         ]
         self.usage()
@@ -79,7 +80,7 @@ class ServerStateShell(ServerStateMinibuf):
     if self.shell is not None:
       self.shell.usage()
     else:
-      self.debugClient.gui.display("write\nread\nvmcs read\n<line>")
+      self.debugClient.gui.display("write\nread\nvmcs read\nwalk\n<line>")
   def getShell(self, t):
     self.shell = None
     self.args = t
@@ -92,6 +93,9 @@ class ServerStateShell(ServerStateMinibuf):
       self.args = test.m.group(1)
     elif test.test("^[ ]*vmcs read (.*)$", t):
       self.shell = controller.server_state_vmcs.ShellVMCS(self.debugClient)
+      self.args = test.m.group(1)
+    elif test.test("^[ ]*walk (.*)$", t):
+      self.shell = controller.linear_to_physical.ShellLinearToPhysical(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^.*[0-9]+.*$", t):
       self.shell = controller.server_state_set_line.ShellSetLine(self.debugClient)
