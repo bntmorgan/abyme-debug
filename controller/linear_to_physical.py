@@ -1,5 +1,5 @@
 from controller.server_state_command import ServerStateCommand, Command
-from controller.server_state import Shell
+from controller.server_state import Shell, BadReply
 from network import Network
 from model.message import *
 
@@ -40,12 +40,14 @@ class LinearToPhysical(Command):
     m = MessageCoreRegsRead()
     self.debugClient.sendMessage(m)
     self.current = self.getIA32_EFER
+    self.expected = MessageCoreRegsData
     return 1
   def getIA32_EFER(self):
     self.core = self.message.core
     m = MessageVMCSRead([self.debugClient.vmcs.fields['GUEST_IA32_EFER']])
     self.debugClient.sendMessage(m)
     self.current = self.checkPagingMode
+    self.expected = MessageVMCSData
     return 1
   def checkPagingMode(self):
     self.IA32_EFER = self.message.fields['GUEST_IA32_EFER'].value
