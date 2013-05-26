@@ -8,8 +8,7 @@ import socket, sys
 from network import *
 from view.gui import Gui
 from model.message import *
-from controller.server_state import BadReply
-from controller.server_state_running import ServerStateRunning
+from controller.server_state import BadReply, ServerStateRunning
 from config.config import Config
 from model.vmcs import VMCS, VMCSField, VMCSField16
 
