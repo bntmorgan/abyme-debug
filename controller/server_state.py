@@ -517,7 +517,8 @@ class LinearToPhysical(Command):
     # PAE Paging
     elif self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
       self.cr3 = self.core.regs.cr3 & 0x00000000ffffff00
-      self.PDPTEAddress = self.cr3 + 8 * ((self.cr3 & 0xc0000000) >> 30)
+      # 
+      self.PDPTEAddress = self.cr3 | ((self.linear & 0xc0000000) >> 27)
       m = MessageMemoryRead(self.PDPTEAddress, 8)
       self.debugClient.sendMessage(m)
       self.current = self.getPDPTE
