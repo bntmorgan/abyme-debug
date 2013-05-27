@@ -1,6 +1,7 @@
 import urwid
 import re
 from model.message import *
+from model.bin import *
 
 class ServerState(object):
   def __init__(self, debugClient):
@@ -386,16 +387,16 @@ class ServerStateWaiting(ServerState):
     elif input == 'r':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address length : ",
-        controller.server_state_dump.ShellDump(self.debugClient)))
+        ShellDump(self.debugClient)))
     elif input == 'w':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address data : ",
-        controller.server_state_write.ShellWrite(self.debugClient)))
+        ShellWrite(self.debugClient)))
     elif input == 'd':
       if len(self.debugClient.messages) == 0:
         return
       m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
-      if isinstance(m, model.message.MessageMemoryData):
+      if isinstance(m, MessageMemoryData):
         b = Bin(m.data, 0)
         self.debugClient.gui.display(b.disasm())
         b = None
@@ -475,12 +476,19 @@ class LinearToPhysical(Command):
     # The address to convert
     self.linear = linear
     # The result
-    self.physical = 0x0
+    self.physical = 0
     # Current step of the algorithm
     self.current = self.getCore
     # Algorithm data
     self.core = None
     self.IA32_EFER = None
+    self.cr3 = 0
+    self.PDPTEAddress = 0
+    self.PDPTE = 0
+    self.PDEAddress = 0
+    self.PDE = 0
+    self.PTEAddress = 0
+    self.PTE = 0
   # Algorithm steps
   def getCore(self):
     m = MessageCoreRegsRead()
@@ -497,11 +505,70 @@ class LinearToPhysical(Command):
     return 1
   def checkPagingMode(self):
     self.IA32_EFER = self.message.fields['GUEST_IA32_EFER'].value
-    if not (self.core.regs.cr0 & (1 << 0) and self.core.regs.cr0 (1 << 31)):
+    # Pagination activated ?
+    if not (self.core.regs.cr0 & (1 << 0) and self.core.regs.cr0 & (1 << 31)):
       self.physical = self.linear
       self.debugClient.info("Page Walk", "Pagination is not activated : %016x" % (self.physical))
       return 0
+    # 32-Bit Paging
+    elif not self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
+      self.debugClient.info("Page Walk", "Unsupported paging mode : 32-Bit Paging : %016x" % (self.physical))
+      return 0
+    # PAE Paging
+    elif self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
+      self.cr3 = self.core.regs.cr3 & 0x00000000ffffff00
+      self.PDPTEAddress = self.cr3 + 8 * ((self.cr3 & 0xc0000000) >> 30)
+      m = MessageMemoryRead(self.PDPTEAddress, 8)
+      self.debugClient.sendMessage(m)
+      self.current = self.getPDPTE
+      self.expected = MessageMemoryData
+      return 1
+    # IA-32e Paging
+    elif self.core.regs.cr4 & (1 << 5) and self.IA32_EFER & (1 << 10):
+      self.debugClient.info("Page Walk", "Pagination is not activated : IA-32e Paging : %016x" % (self.physical))
+      return 0
     return self.getCore()
+  # PDPTE
+  def getPDPTE(self):
+    self.PDPTE = unpack('Q', self.message.data)[0]
+    self.debugClient.info("Page Walk", "PDPTE : %016x" % (self.PDPTE))
+    # Present ?
+    if not (self.PDPTE & (1 << 0)):
+      self.debugClient.info("Page Walk", "Unsupported not present PDPTE")
+      return 0
+    self.PDEAddress = (self.PDPTE & 0x000ffffffffff000) | ((self.linear & 0x000000003fe00000) >> 18)
+    m = MessageMemoryRead(self.PDEAddress, 8)
+    self.debugClient.sendMessage(m)
+    self.current = self.getPDE
+    self.expected = MessageMemoryData
+    return 1
+  # PDE
+  def getPDE(self):
+    self.PDE = unpack('Q', self.message.data)[0]
+    self.debugClient.info("Page Walk", "PDE : %016x" % (self.PDE))
+    # Present and 2MB
+    if not (self.PDE & 1):
+      self.debugClient.info("Page Walk", "Unsupported not present PDE")
+      return 0
+    elif (self.PDE & (1 << 0)) and (self.PDE & (1 << 7)):
+      self.physical = (self.PTE & 0x000fffffffe00000) | (self.linear & 0x0000000001ffffc)
+      self.debugClient.info("Page Walk", "4MB page physical address : %016x" % (self.physical))
+      return 0
+    self.PTEAddress = (self.PDE & 0x000ffffffffff000) | ((self.linear & 0x00000000001ff000) >> 9)
+    m = MessageMemoryRead(self.PTEAddress, 8)
+    self.debugClient.sendMessage(m)
+    self.current = self.getPTE
+    self.expected = MessageMemoryData
+    return 1
+  # PTE
+  def getPTE(self):
+    self.PTE = unpack('Q', self.message.data)[0]
+    self.debugClient.info("Page Walk", "PTE : %016x" % (self.PTE))
+    if not (self.PTE & 1):
+      self.debugClient.info("Page Walk", "Unsupported not present")
+    self.physical = (self.PTE & 0x000ffffffffff000) | (self.linear & 0x000000000000ffc)
+    self.debugClient.info("Page Walk", "4Ko page physical address : %016x" % (self.physical))
+    return 0
   # Result
   def getPhysical(self):
     return self.physical
