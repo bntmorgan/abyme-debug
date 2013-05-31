@@ -86,8 +86,8 @@ class Shell(object):
     self.debugClient = debugClient
   def validate(self, t):
     raise NotImplementedError("Subclasses should implement this!")
-  def cancel(self):
-    raise NotImplementedError("Subclasses should implement this!")
+  # def cancel(self):
+    # raise NotImplementedError("Subclasses should implement this!")
   def submit(self):
     raise NotImplementedError("Subclasses should implement this!")
   def usage(self):
@@ -123,7 +123,7 @@ class ServerStateCommand(ServerStateReply):
     # Execute command
     self.command.message = message
     if self.command.expected != None and not isinstance(self.command.message, self.command.expected):
-      raise BadReply
+      raise BadReply(self.command.message.messageType)
     if not self.command.execute():
       self.changeState(ServerStateWaiting(self.debugClient))
     self.command.message = None
@@ -163,7 +163,7 @@ class ShellDump(Shell):
 class ServerStateDumpReply(ServerStateReply):
   def notifyMessage(self, message):
     if not isinstance(message, MessageMemoryData):
-      raise BadReply
+      raise BadReply(message.messageType)
     self.changeState(ServerStateWaiting(self.debugClient))
 
 class ServerStateRegs(ServerStateReply):
@@ -175,8 +175,10 @@ class ServerStateRegs(ServerStateReply):
     self.debugClient.sendMessage(m)
   def notifyMessage(self, message):
     if not isinstance(message, MessageCoreRegsData):
-      raise BadReply
+      raise BadReply(message.messageType)
     self.changeState(ServerStateWaiting(self.debugClient))
+    # Install the core object into debug client
+    self.debugClient.core = message.core
 
 class ServerStateRunning(ServerState):
   def __init__(self, debugClient):
@@ -195,7 +197,7 @@ class ServerStateRunning(ServerState):
   def notifyMessage(self, message):
     # Handle the message according to the type
     if message.messageType == Message.UnhandledVMExit:
-      self.debugClient.step = 1
+      self.debugClient.setStep()
       # Server is now waiting
       self.changeState(ServerStateWaiting(self.debugClient))
     elif message.messageType == Message.VMExit:
@@ -205,6 +207,10 @@ class ServerStateRunning(ServerState):
         self.changeState(ServerStateWaiting(self.debugClient))
       else:
         self.debugClient.sendContinue()
+    elif message.messageType == Message.VMMPanic:
+      self.debugClient.setStep()
+      self.changeState(ServerStateWaiting(self.debugClient))
+      # self.changeState(ServerStatePanic(self.debugClient))
     else:
       raise BadReply(message.messageType)
   def usage(self):
@@ -356,6 +362,9 @@ class ServerStateVMCSReadReply(ServerStateReply):
     if not isinstance(message, MessageVMCSData):
       raise BadReply
     self.changeState(ServerStateWaiting(self.debugClient))
+    # Cache the received fields into debugClient
+    for f in message.fields:
+      self.debugClient.vmcs.fields[f.name] = f
 
 class ServerStateWaiting(ServerState):
   def __init__(self, debugClient):
@@ -379,11 +388,17 @@ class ServerStateWaiting(ServerState):
       self.debugClient.sendContinue()
       # server is now running
       self.changeState(ServerStateRunning(self.debugClient))
+      # Expire the cache
+      self.debugClient.cacheExpired()
     elif input == 't':
       if self.debugClient.mTF:
         self.debugClient.endMTF()
       else:
         self.debugClient.setMTF()
+      # Launch the command
+      s = ServerStateCommand(self.debugClient, MTF(self.debugClient.mTF, self.debugClient))
+      self.changeState(s)
+      s.start()
     elif input == 'r':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address length : ",
@@ -422,6 +437,7 @@ class ShellWrite(Shell):
     # Memory request values
     self.address = 0
     self.length = 0
+    self.data = None
   def validate(self, t):
     t = t.rsplit(' ')
     if len(t) != 2:
@@ -516,9 +532,8 @@ class LinearToPhysical(Command):
       return 0
     # PAE Paging
     elif self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
-      self.cr3 = self.core.regs.cr3 & 0x00000000ffffff00
-      # 
-      self.PDPTEAddress = self.cr3 | ((self.linear & 0xc0000000) >> 27)
+      self.cr3 = self.core.regs.cr3 & 0x00000000fffffe00
+      self.PDPTEAddress = self.cr3 | ((self.linear & 0xc0000000)>> 27)
       m = MessageMemoryRead(self.PDPTEAddress, 8)
       self.debugClient.sendMessage(m)
       self.current = self.getPDPTE
@@ -528,7 +543,6 @@ class LinearToPhysical(Command):
     elif self.core.regs.cr4 & (1 << 5) and self.IA32_EFER & (1 << 10):
       self.debugClient.info("Page Walk", "Pagination is not activated : IA-32e Paging : %016x" % (self.physical))
       return 0
-    return self.getCore()
   # PDPTE
   def getPDPTE(self):
     self.PDPTE = unpack('Q', self.message.data)[0]
@@ -573,6 +587,52 @@ class LinearToPhysical(Command):
   # Result
   def getPhysical(self):
     return self.physical
+  # Execution
+  def execute(self):
+    return self.current()
+
+class ServerStatePanic(ServerState):
+  def __init__(self, debugClient):
+    ServerState.__init__(self, debugClient)
+  def notifyUserInput(self, input):
+    if input in ('q', 'Q'):
+      raise urwid.ExitMainLoop()
+    elif input == 'h':
+      self.usage()
+    elif input == 'f':
+      self.changeState(ServerStateWaiting(self.debugClient))
+    else:
+      self.usage()
+  def usage(self):
+    self.debugClient.gui.display("Usage()\nq : Quit\nf : Force waiting state (if VMM rebooted)")
+
+class MTF(Command):
+  def __init__(self, mTF, debugClient):
+    Command.__init__(self)
+    self.debugClient = debugClient
+    # mTF bit
+    self.mTF = mTF
+    # Fields
+    self.field = self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']
+    # current
+    self.current = self.readPrimaryProcBasedVMExecControls
+  # Algorithm steps
+  def readPrimaryProcBasedVMExecControls(self):
+    m = MessageVMCSRead([self.field])
+    self.debugClient.sendMessage(m)
+    self.current = self.writePrimaryProcBasedVMExecControls
+    self.expected = MessageVMCSData
+    return 1
+  def writePrimaryProcBasedVMExecControls(self):
+    self.field.value = (self.message.fields['CPU_BASED_VM_EXEC_CONTROL'].value & ((self.mTF << 27) | ~(1 << 27))) | (self.mTF << 27)
+    # self.field.value = self.message.fields['CPU_BASED_VM_EXEC_CONTROL'].value
+    m = MessageVMCSWrite([self.field])
+    self.debugClient.sendMessage(m)
+    self.current = self.writeCommit
+    self.expected = MessageVMCSWriteCommit
+    return 1
+  def writeCommit(self):
+    return 0
   # Execution
   def execute(self):
     return self.current()
