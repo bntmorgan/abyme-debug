@@ -35,5 +35,3 @@ class ServerStateCommand(ServerStateReply):
     return len(self.commands) > 1
   def commandFinished(self):
     return self.commands[0].expected == None or self.commands[0].messageOut == None
-
-

@@ -2,7 +2,7 @@ from model.message import *
 
 #
 # The command object doesn't need to be interfaced with the 
-# user only controller stuff
+# user only controller stuff
 #
 
 class Command(object):
@@ -14,14 +14,14 @@ class Command(object):
     self.expected = None
   def execute(self):
     raise NotImplementedError("Subclasses should implement this!")
-  def sendAndReceive(message, expected):
+  def sendAndReceive(self, message, expected):
     self.messageOut = message
     self.expected = expected
 
 class CommandMultiple(Command):
-  def __init__(self):
-    Command.__init__(self, start)
-    # current
+  def __init__(self, start):
+    Command.__init__(self)
+    # current
     self.current = start
   def execute(self):
     self.current()

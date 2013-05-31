@@ -2,6 +2,7 @@ import urwid
 import re
 from model.message import *
 from model.bin import *
+from controller.command import *
 
 class ServerState(object):
   def __init__(self, debugClient):
@@ -108,31 +109,43 @@ class ServerStateReply(ServerState):
   def usage(self):
     self.debugClient.gui.display("Usage()\n Waiting for response... Press escape to stop")
 
-class Command(object):
-  def __init__(self):
-    self.message = None
-    self.expected = None
-  def execute(self):
-    raise NotImplementedError("Subclasses should implement this!")
-
 class ServerStateCommand(ServerStateReply):
-  def __init__(self, debugClient, command):
+  def __init__(self, debugClient, commands = []):
     ServerStateReply.__init__(self, debugClient)
-    self.command = command
+    self.commands = commands
   def notifyMessage(self, message):
-    # Execute command
-    self.command.message = message
-    if self.command.expected != None and not isinstance(self.command.message, self.command.expected):
-      raise BadReply(self.command.message.messageType)
-    if not self.command.execute():
-      self.changeState(ServerStateWaiting(self.debugClient))
-    self.command.message = None
+    self.commands[0].message = message
+    if self.commands[0].expected != None and not isinstance(self.commands[0].message, self.commands[0].expected):
+      raise BadReply(self.commands[0].message.messageType)
+    # Execute and handle the commands
+    self.execute()
   def start(self):
-    # Execute command
-    if not self.command.execute():
-      self.changeState(ServerStateWaiting(self.debugClient))
+    # Execute and handle the commands
+    self.execute()
+  def execute(self):
+    while 1:
+      self.commands[0].execute()
+      if self.commandFinished():
+        if self.isCommandNext():
+          self.commands.pop()
+        else:
+          # Finally finished
+          self.changeState(ServerStateWaiting(self.debugClient))
+          break
+      else:
+        self.send()
+        self.commands[0].message = None
+        self.commands[0].expected = None
+        self.commands[0].messageOut = None
+        break
+  def send(self):
+    self.debugClient.sendMessage(self.commands[0].messageOut)
+  def isCommandNext(self):
+    return len(self.commands) > 1
+  def commandFinished(self):
+    return self.commands[0].expected == None or self.commands[0].messageOut == None
 
-class ShellDump(Shell):
+class ShellRead(Shell):
   def __init__(self, debugClient):
     Shell.__init__(self, debugClient)
     # Memory request values
@@ -149,11 +162,9 @@ class ShellDump(Shell):
       return 0
     return 1
   def submit(self):
-    self.sendMemoryRequest()
-    self.changeState(ServerStateDumpReply(self.debugClient))
-  def sendMemoryRequest(self):
-    m = MessageMemoryRead(self.address, self.length)
-    self.debugClient.sendMessage(m)
+    s = ServerStateCommand(self.debugClient, [CommandMemoryRead(self.address, self.length, None)])
+    self.changeState(s)
+    s.start()
   def complete(self, t):
     self.usage()
     return []
@@ -177,7 +188,7 @@ class ServerStateRegs(ServerStateReply):
     if not isinstance(message, MessageCoreRegsData):
       raise BadReply(message.messageType)
     self.changeState(ServerStateWaiting(self.debugClient))
-    # Install the core object into debug client
+    # Install the core object into debug client
     self.debugClient.core = message.core
 
 class ServerStateRunning(ServerState):
@@ -317,7 +328,7 @@ class ServerStateShell(ServerStateMinibuf):
       self.shell = ShellWrite(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^[ ]*read (.*)$", t):
-      self.shell = ShellDump(self.debugClient)
+      self.shell = ShellRead(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^[ ]*vmcs read (.*)$", t):
       self.shell = ShellVMCS(self.debugClient)
@@ -388,7 +399,7 @@ class ServerStateWaiting(ServerState):
       self.debugClient.sendContinue()
       # server is now running
       self.changeState(ServerStateRunning(self.debugClient))
-      # Expire the cache
+      # Expire the cache
       self.debugClient.cacheExpired()
     elif input == 't':
       if self.debugClient.mTF:
@@ -402,7 +413,7 @@ class ServerStateWaiting(ServerState):
     elif input == 'r':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address length : ",
-        ShellDump(self.debugClient)))
+        ShellRead(self.debugClient)))
     elif input == 'w':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address data : ",
