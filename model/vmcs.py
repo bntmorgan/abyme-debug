@@ -1,3 +1,5 @@
+from struct import *
+
 class VMCSField(object):
   def __init__(self):
     self.length = 0
@@ -13,6 +15,8 @@ class VMCSField16(VMCSField):
     self.length = 2
     self.encoding = encoding
     self.name = Encoding.e[self.encoding]['name']
+  def pack(self):
+    return pack('B', self.length) + pack('Q', self.encoding) + pack('H', self.value)
 
 class VMCSField32(VMCSField):
   def __init__(self, encoding):
@@ -20,6 +24,8 @@ class VMCSField32(VMCSField):
     self.length = 4
     self.encoding = encoding
     self.name = Encoding.e[self.encoding]['name']
+  def pack(self):
+    return pack('B', self.length) + pack('Q', self.encoding) + pack('I', self.value)
 
 class VMCSField64(VMCSField):
   def __init__(self, encoding):
@@ -27,13 +33,17 @@ class VMCSField64(VMCSField):
     self.length = 8
     self.encoding = encoding
     self.name = Encoding.e[self.encoding]['name']
+  def pack(self):
+    return pack('B', self.length) + pack('Q', self.encoding) + pack('Q', self.value)
 
 class VMCSFieldNW(VMCSField):
   def __init__(self, encoding):
     VMCSField.__init__(self)
-    self.length = 4
+    self.length = 8
     self.encoding = encoding
     self.name = Encoding.e[self.encoding]['name']
+  def pack(self):
+    return pack('B', self.length) + pack('Q', self.encoding) + pack('Q', self.value)
 
 class VMCS(object):
   def __init__(self):
@@ -113,26 +123,24 @@ class Encoding(object):
     0x00002400: {'name': 'GUEST_PHYSICAL_ADDR', 'c': VMCSField64},
     0x00002401: {'name': 'GUEST_PHYSICAL_ADDR_HIGH', 'c': VMCSField64},
     # 64-Bit Guest-State Fields
-    0x00002800: {'name': 'GUEST_PHYSICAL_ADDR', 'c': VMCSField64},
-    0x00002801: {'name': 'GUEST_PHYSICAL_ADDR_HIGH', 'c': VMCSField64},
-    0x00002802: {'name': 'VMCS_LINK_POINTER', 'c': VMCSField64},
-    0x00002803: {'name': 'VMCS_LINK_POINTER_HIGH', 'c': VMCSField64},
-    0x00002804: {'name': 'GUEST_IA32_DEBUGCTL', 'c': VMCSField64},
-    0x00002805: {'name': 'GUEST_IA32_DEBUGCTL_HIGH', 'c': VMCSField64},
-    0x00002806: {'name': 'GUEST_IA32_PAT', 'c': VMCSField64},
-    0x00002807: {'name': 'GUEST_IA32_PAT_HIGH', 'c': VMCSField64},
-    0x00002808: {'name': 'GUEST_IA32_EFER', 'c': VMCSField64},
-    0x00002809: {'name': 'GUEST_IA32_EFER_HIGH', 'c': VMCSField64},
-    0x0000280A: {'name': 'GUEST_IA32_PERF_GLOBAL_CTRL', 'c': VMCSField64},
-    0x0000280B: {'name': 'GUEST_IA32_PERF_GLOBAL_CTRL_HIGH', 'c': VMCSField64},
-    0x0000280C: {'name': 'GUEST_PDPTR0', 'c': VMCSField64},
-    0x0000280D: {'name': 'GUEST_PDPTR0_HIGH', 'c': VMCSField64},
-    0x0000280E: {'name': 'GUEST_PDPTR1', 'c': VMCSField64},
-    0x0000280F: {'name': 'GUEST_PDPTR1_HIGH', 'c': VMCSField64},
-    0x00002810: {'name': 'GUEST_PDPTR2', 'c': VMCSField64},
-    0x00002811: {'name': 'GUEST_PDPTR2_HIGH', 'c': VMCSField64},
-    0x00002812: {'name': 'GUEST_PDPTR3', 'c': VMCSField64},
-    0x00002813: {'name': 'GUEST_PDPTR3_HIGH', 'c': VMCSField64},
+    0x00002800: {'name': 'VMCS_LINK_POINTER', 'c': VMCSField64},
+    0x00002801: {'name': 'VMCS_LINK_POINTER_HIGH', 'c': VMCSField64},
+    0x00002802: {'name': 'GUEST_IA32_DEBUGCTL', 'c': VMCSField64},
+    0x00002803: {'name': 'GUEST_IA32_DEBUGCTL_HIGH', 'c': VMCSField64},
+    0x00002804: {'name': 'GUEST_IA32_PAT', 'c': VMCSField64},
+    0x00002805: {'name': 'GUEST_IA32_PAT_HIGH', 'c': VMCSField64},
+    0x00002806: {'name': 'GUEST_IA32_EFER', 'c': VMCSField64},
+    0x00002807: {'name': 'GUEST_IA32_EFER_HIGH', 'c': VMCSField64},
+    0x00002808: {'name': 'GUEST_IA32_PERF_GLOBAL_CTRL', 'c': VMCSField64},
+    0x00002809: {'name': 'GUEST_IA32_PERF_GLOBAL_CTRL_HIGH', 'c': VMCSField64},
+    0x0000280A: {'name': 'GUEST_PDPTR0', 'c': VMCSField64},
+    0x0000280B: {'name': 'GUEST_PDPTR0_HIGH', 'c': VMCSField64},
+    0x0000280C: {'name': 'GUEST_PDPTR1', 'c': VMCSField64},
+    0x0000280D: {'name': 'GUEST_PDPTR1_HIGH', 'c': VMCSField64},
+    0x0000280E: {'name': 'GUEST_PDPTR2', 'c': VMCSField64},
+    0x0000280F: {'name': 'GUEST_PDPTR2_HIGH', 'c': VMCSField64},
+    0x00002810: {'name': 'GUEST_PDPTR3', 'c': VMCSField64},
+    0x00002811: {'name': 'GUEST_PDPTR3_HIGH', 'c': VMCSField64},
     # 64-Bit Host-State Fields
     0x00002C00: {'name': 'HOST_IA32_PAT', 'c': VMCSField32},
     0x00002C01: {'name': 'HOST_IA32_PAT_HIGH', 'c': VMCSField32},

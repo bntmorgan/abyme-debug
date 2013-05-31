@@ -21,6 +21,7 @@ class DebugClient():
     self.gui = None
     # Models
     self.vmcs = None
+    self.core = None
     self.serverState = None
   def createComponents(self):
     # Create all the components
@@ -75,7 +76,9 @@ class DebugClient():
     self.gui.messageFocus(message.number)
   def info(self, label, text):
     self.addMessage(MessageInfo(label, text))
-
+  def cacheExpired():
+    self.core = None
+    self.vmcs = VMCS.createVMCS()
 
 # Debug client main
 try: 

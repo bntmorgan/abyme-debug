@@ -32,7 +32,10 @@ class Message(object):
       UnhandledVMExit,
       VMCSRead,
       VMCSData,
-  ) = range(13)
+      VMMPanic,
+      VMCSWrite,
+      VMCSWriteCommit,
+  ) = range(16)
   def __init__(self):
     self.messageType = Message.Message
     # GUI
@@ -106,6 +109,12 @@ class MessageNetwork(Message):
       m = MessageVMCSRead()
     elif m.messageType == Message.VMCSData:
       m = MessageVMCSData()
+    elif m.messageType == Message.VMMPanic:
+      m = MessageVMMPanic()
+    elif m.messageType == Message.VMCSWrite:
+      m = MessageVMCSWrite()
+    elif m.messageType == Message.VMCSWriteCommit:
+      m = MessageVMCSWriteCommit()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -233,6 +242,31 @@ class MessageVMCSData(MessageIn):
       s = s + f.format() + "\n"
     return MessageIn.formatFull(self) + '\n' + s
 
+class MessageVMMPanic(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.VMMPanic
+    self.code = 0
+  def unPack(self):
+    MessageIn.unPack(self)
+    self.code = unpack("Q", self.frame.payload[2:10])[0]
+  def format(self):
+    return "%s Vmm Panic : code %d" % (MessageIn.format(self), self.code)
+
+class MessageVMCSWriteCommit(MessageIn):
+  def __init__(self, ok = 0):
+    MessageIn.__init__(self)
+    self.messageType = Message.VMCSWriteCommit
+    self.ok = ok
+  def unPack(self):
+    MessageIn.unPack(self)
+    t = unpack('B', self.frame.payload[2])
+    self.ok = t[0]
+  def format(self):
+    return "%s VMCSWriteCommit" % (MessageIn.format(self))
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nok : %d" % (self.ok)
+
 '''
 Output messages
 '''
@@ -303,5 +337,23 @@ class MessageVMCSRead(MessageOut):
     return s
   def format(self):
     return "%s VMCSRead" % (MessageOut.format(self))
+  def formatFull(self):
+    return MessageOut.formatFull(self)
+
+class MessageVMCSWrite(MessageOut):
+  def __init__(self, fields = []):
+    MessageOut.__init__(self)
+    self.messageType = Message.VMCSWrite
+    self.fields = fields
+  def pack(self):
+    s = MessageOut.pack(self)
+    for f in self.fields:
+      s = s + f.pack()
+    # Mark the end of message
+    t = pack('B', 0)
+    s = s + t
+    return s
+  def format(self):
+    return "%s VMCSWrite" % (MessageOut.format(self))
   def formatFull(self):
     return MessageOut.formatFull(self)
