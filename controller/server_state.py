@@ -162,7 +162,8 @@ class ShellRead(Shell):
       return 0
     return 1
   def submit(self):
-    s = ServerStateCommand(self.debugClient, [CommandMemoryRead(self.address, self.length, None)])
+    s = ServerStateCommand(self.debugClient, [
+      CommandMemoryRead({'address': self.address, 'length': self.length, 'memory': None})])
     self.changeState(s)
     s.start()
   def complete(self, t):
