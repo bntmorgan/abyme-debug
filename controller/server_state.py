@@ -114,6 +114,8 @@ class ServerStateCommand(ServerStateReply):
   def __init__(self, debugClient, commands = [], params = {}):
     ServerStateReply.__init__(self, debugClient)
     self.commands = deque(commands)
+    # Partage du debugClient aux commandes
+    params['debugClient'] = debugClient
     self.params = params
     self.comand = None
   def notifyMessage(self, message):

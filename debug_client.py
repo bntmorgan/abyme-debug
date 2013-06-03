@@ -76,7 +76,7 @@ class DebugClient():
     self.gui.messageFocus(message.number)
   def info(self, label, text):
     self.addMessage(MessageInfo(label, text))
-  def cacheExpired():
+  def cacheExpired(self):
     self.core = None
     self.vmcs = VMCS.createVMCS()
 

@@ -21,6 +21,9 @@ class Command(object):
   def sendAndReceive(self, message, expected):
     self.messageOut = message
     self.expected = expected
+  def info(self, label, text):
+    if self.params['debugClient']:
+      self.params['debugClient'].info(label, text)
 
 class CommandMultiple(Command):
   def __init__(self, params, start):
@@ -101,11 +104,11 @@ class LinearToPhysical(CommandMultiple):
     # Pagination activated ?
     if not (self.core.regs.cr0 & (1 << 0) and self.core.regs.cr0 & (1 << 31)):
       self.physical = self.linear
-      # self.debugClient.info("Page Walk", "Pagination is not activated : %016x" % (self.physical))
+      self.info("Page Walk", "Pagination is not activated : %016x" % (self.physical))
       return
     # 32-Bit Paging
     elif not self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
-      # self.debugClient.info("Page Walk", "Unsupported paging mode : 32-Bit Paging : %016x" % (self.physical))
+      self.info("Page Walk", "Unsupported paging mode : 32-Bit Paging : %016x" % (self.physical))
       return
     # PAE Paging
     elif self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
@@ -115,15 +118,15 @@ class LinearToPhysical(CommandMultiple):
       self.next(self.getPDPTE)
     # IA-32e Paging
     elif self.core.regs.cr4 & (1 << 5) and self.IA32_EFER & (1 << 10):
-      # self.debugClient.info("Page Walk", "Pagination is not activated : IA-32e Paging : %016x" % (self.physical))
+      self.info("Page Walk", "Pagination is not activated : IA-32e Paging : %016x" % (self.physical))
       return
   # PDPTE
   def getPDPTE(self):
     self.PDPTE = unpack('Q', self.message.data)[0]
-    # self.debugClient.info("Page Walk", "PDPTE : %016x" % (self.PDPTE))
+    self.info("Page Walk", "PDPTE : %016x" % (self.PDPTE))
     # Present ?
     if not (self.PDPTE & (1 << 0)):
-      # self.debugClient.info("Page Walk", "Unsupported not present PDPTE")
+      self.info("Page Walk", "Unsupported not present PDPTE")
       return
     self.PDEAddress = (self.PDPTE & 0x000ffffffffff000) | ((self.linear & 0x000000003fe00000) >> 18)
     self.sendAndReceive(MessageMemoryRead(self.PDEAddress, 8), MessageMemoryData)
@@ -131,14 +134,14 @@ class LinearToPhysical(CommandMultiple):
   # PDE
   def getPDE(self):
     self.PDE = unpack('Q', self.message.data)[0]
-    # self.debugClient.info("Page Walk", "PDE : %016x" % (self.PDE))
+    self.info("Page Walk", "PDE : %016x" % (self.PDE))
     # Present and 2MB
     if not (self.PDE & 1):
-      # self.debugClient.info("Page Walk", "Unsupported not present PDE")
+      self.info("Page Walk", "Unsupported not present PDE")
       return
     elif (self.PDE & (1 << 0)) and (self.PDE & (1 << 7)):
       self.physical = (self.PTE & 0x000fffffffe00000) | (self.linear & 0x0000000001ffffc)
-      # self.debugClient.info("Page Walk", "4MB page physical address : %016x" % (self.physical))
+      self.info("Page Walk", "4MB page physical address : %016x" % (self.physical))
       return
     self.PTEAddress = (self.PDE & 0x000ffffffffff000) | ((self.linear & 0x00000000001ff000) >> 9)
     self.sendAndReceive(MessageMemoryRead(self.PTEAddress, 8), MessageMemoryData)
@@ -151,7 +154,7 @@ class LinearToPhysical(CommandMultiple):
       self.debugClient.info("Page Walk", "Unsupported not present")
       return
     self.physical = (self.PTE & 0x000ffffffffff000) | (self.linear & 0x000000000000ffc)
-    # self.debugClient.info("Page Walk", "4Ko page physical address : %016x" % (self.physical))
+    self.info("Page Walk", "4Ko page physical address : %016x" % (self.physical))
     return
 
 class MTF(Command):
