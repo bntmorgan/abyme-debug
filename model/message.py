@@ -326,7 +326,7 @@ class MessageVMCSRead(MessageOut):
     self.fields = fields
   def pack(self):
     s = MessageOut.pack(self)
-    for f in self.fields:
+    for k, f in self.fields.iteritems():
       t = pack('B', f.length)
       s = s + t
       t = pack('Q', f.encoding)
@@ -347,7 +347,7 @@ class MessageVMCSWrite(MessageOut):
     self.fields = fields
   def pack(self):
     s = MessageOut.pack(self)
-    for f in self.fields:
+    for k, f in self.fields.iteritems():
       s = s + f.pack()
     # Mark the end of message
     t = pack('B', 0)

@@ -79,7 +79,7 @@ class CommandVMCSWrite(CommandMultiple):
 
 class LinearToPhysical(CommandMultiple):
   def __init__(self, params):
-    CommandMultiple.__init__(self, params, self.getPagingMode)
+    CommandMultiple.__init__(self, params, self.checkPagingMode)
     # The address to convert
     self.linear = self.params['linear']
     # The result
@@ -161,8 +161,6 @@ class MTF(Command):
     self.mTF = self.params['mTF']
     # Fields
     self.field = self.params['fields']['CPU_BASED_VM_EXEC_CONTROL']
-    # current
-    self.current = self.readPrimaryProcBasedVMExecControls
   # Algorithm steps
   def execute(self):
     self.field.value = (self.message.fields['CPU_BASED_VM_EXEC_CONTROL'].value & ((self.mTF << 27) | ~(1 << 27))) | (self.mTF << 27)

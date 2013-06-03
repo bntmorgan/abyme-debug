@@ -334,7 +334,7 @@ class ShellVMCS(Shell):
     return 1
   def submit(self):
     s = ServerStateCommand(self.debugClient, [
-      CommandVMCSRead({'fields': [self.f]})])
+      CommandVMCSRead({'fields': {self.f.name : self.f}})])
     self.changeState(s)
     s.start()
   def complete(self, t):
@@ -380,7 +380,7 @@ class ServerStateWaiting(ServerState):
       # Launch the command
       params = {
         'mTF': self.debugClient.mTF,
-        'fields': [self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']]
+        'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']}
       }
       s = ServerStateCommand(self.debugClient, [
         # Read Proc base exec control VMCS field
@@ -468,7 +468,7 @@ class ShellLinearToPhysical(Shell):
   def submit(self):
     params = {
       'core': None,
-      'fields': [self.debugClient.vmcs.fields['GUEST_IA32_EFER']],
+      'fields': {'GUEST_IA32_EFER': self.debugClient.vmcs.fields['GUEST_IA32_EFER']},
       'linear': self.linear
     }
     s = ServerStateCommand(self.debugClient, [
