@@ -1,5 +1,6 @@
 import urwid
 import re
+from collections import deque
 from model.message import *
 from model.bin import *
 from controller.command import *
@@ -110,40 +111,44 @@ class ServerStateReply(ServerState):
     self.debugClient.gui.display("Usage()\n Waiting for response... Press escape to stop")
 
 class ServerStateCommand(ServerStateReply):
-  def __init__(self, debugClient, commands = []):
+  def __init__(self, debugClient, commands = [], params = {}):
     ServerStateReply.__init__(self, debugClient)
-    self.commands = commands
+    self.commands = deque(commands)
+    self.params = params
+    self.comand = None
   def notifyMessage(self, message):
-    self.commands[0].message = message
-    if self.commands[0].expected != None and not isinstance(self.commands[0].message, self.commands[0].expected):
-      raise BadReply(self.commands[0].message.messageType)
+    self.command.message = message
+    if self.command.expected != None and not isinstance(self.command.message, self.command.expected):
+      raise BadReply(self.command.message.messageType)
     # Execute and handle the commands
     self.execute()
   def start(self):
     # Execute and handle the commands
+    self.command = self.commands[0](self.params)
     self.execute()
   def execute(self):
     while 1:
-      self.commands[0].execute()
+      self.command.execute()
       if self.commandFinished():
         if self.isCommandNext():
-          self.commands.pop()
+          self.commands.popleft()
+          self.command = self.commands[0](self.params)
         else:
           # Finally finished
           self.changeState(ServerStateWaiting(self.debugClient))
           break
       else:
         self.send()
-        self.commands[0].message = None
-        self.commands[0].expected = None
-        self.commands[0].messageOut = None
+        self.command.message = None
+        self.command.expected = None
+        self.command.messageOut = None
         break
   def send(self):
-    self.debugClient.sendMessage(self.commands[0].messageOut)
+    self.debugClient.sendMessage(self.command.messageOut)
   def isCommandNext(self):
     return len(self.commands) > 1
   def commandFinished(self):
-    return self.commands[0].expected == None or self.commands[0].messageOut == None
+    return self.command.expected == None or self.command.messageOut == None
 
 class ShellRead(Shell):
   def __init__(self, debugClient):
@@ -162,8 +167,8 @@ class ShellRead(Shell):
       return 0
     return 1
   def submit(self):
-    s = ServerStateCommand(self.debugClient, [
-      CommandMemoryRead({'address': self.address, 'length': self.length, 'memory': None})])
+    s = ServerStateCommand(self.debugClient, [CommandMemoryRead],
+      {'address': self.address, 'length': self.length, 'memory': None})
     self.changeState(s)
     s.start()
   def complete(self, t):
@@ -333,8 +338,8 @@ class ShellVMCS(Shell):
       return 0
     return 1
   def submit(self):
-    s = ServerStateCommand(self.debugClient, [
-      CommandVMCSRead({'fields': {self.f.name : self.f}})])
+    s = ServerStateCommand(self.debugClient, [CommandVMCSRead],
+      {'fields': {self.f.name : self.f}})
     self.changeState(s)
     s.start()
   def complete(self, t):
@@ -384,12 +389,12 @@ class ServerStateWaiting(ServerState):
       }
       s = ServerStateCommand(self.debugClient, [
         # Read Proc base exec control VMCS field
-        CommandVMCSRead(params),
+        CommandVMCSRead,
         # Add or remove MTF flag
-        MTF(params),
+        MTF,
         # Write Proc base exec control VMCS field
-        CommandVMCSWrite(params)
-      ])
+        CommandVMCSWrite
+      ], params)
       self.changeState(s)
       s.start()
     elif input == 'r':
@@ -416,8 +421,8 @@ class ServerStateWaiting(ServerState):
     elif input == ':':
       self.changeState(ServerStateShell(self.debugClient))
     elif input == 'R':
-      s = ServerStateCommand(self.debugClient, [
-        CommandCoreRegsRead({'core': None})])
+      s = ServerStateCommand(self.debugClient, [CommandCoreRegsRead],
+        {'core': None})
       self.changeState(s)
       s.start()
     else:
@@ -445,8 +450,8 @@ class ShellWrite(Shell):
       return 0
     return 1
   def submit(self):
-    s = ServerStateCommand(self.debugClient, [
-      CommandMemoryWrite({'address': self.address, 'memory': self.data, 'ok': 0})])
+    s = ServerStateCommand(self.debugClient, [CommandMemoryWrite],
+      {'address': self.address, 'memory': self.data, 'ok': 0})
     self.changeState(s)
     s.start()
   def complete(self, t):
@@ -473,12 +478,12 @@ class ShellLinearToPhysical(Shell):
     }
     s = ServerStateCommand(self.debugClient, [
       # Get core regs
-      CommandCoreRegsRead(params),
+      CommandCoreRegsRead,
       # Get IA32_EFER
-      CommandVMCSRead(params),
+      CommandVMCSRead,
       # Do the page walk
-      LinearToPhysical(params)
-    ])
+      LinearToPhysical
+    ], params)
     self.changeState(s)
     s.start()
   def complete(self, t):

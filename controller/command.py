@@ -163,5 +163,5 @@ class MTF(Command):
     self.field = self.params['fields']['CPU_BASED_VM_EXEC_CONTROL']
   # Algorithm steps
   def execute(self):
-    self.field.value = (self.message.fields['CPU_BASED_VM_EXEC_CONTROL'].value & ((self.mTF << 27) | ~(1 << 27))) | (self.mTF << 27)
-    self.params['fields']['CPU_BASE_VM_EXEC_CONTROL'].value = self.field.value
+    self.field.value = (self.field.value & ((self.mTF << 27) | ~(1 << 27))) | (self.mTF << 27)
+    self.params['fields']['CPU_BASED_VM_EXEC_CONTROL'].value = self.field.value
