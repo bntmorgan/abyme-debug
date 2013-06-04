@@ -208,7 +208,8 @@ class ServerStateRunning(ServerState):
         self.debugClient.sendContinue()
     elif message.messageType == Message.VMMPanic:
       self.debugClient.setStep()
-      self.changeState(ServerStateWaiting(self.debugClient))
+      self.debugClient.sendContinue()
+      # self.changeState(ServerStateWaiting(self.debugClient))
       # self.changeState(ServerStatePanic(self.debugClient))
     else:
       raise BadReply(message.messageType)
