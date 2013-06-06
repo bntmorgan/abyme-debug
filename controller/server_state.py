@@ -4,7 +4,7 @@ from collections import deque
 from model.message import *
 from model.bin import *
 from controller.command import *
-from log import log
+import log
 
 class ServerState(object):
   def __init__(self, debugClient):
@@ -16,7 +16,7 @@ class ServerState(object):
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")
   def changeState(self, serverState):
-    log("%s --> %s" % (self.__class__.__name__, serverState.__class__.__name__))
+    log.log("%s --> %s" % (self.__class__.__name__, serverState.__class__.__name__))
     self.debugClient.serverState = serverState
 
 class BadReply(BaseException):
@@ -66,6 +66,7 @@ class ServerStateMinibuf(ServerState):
   def complete(self, t):
     raise NotImplementedError("Subclasses should implement this!")
   def notifyMessage(self, message):
+    sys.exit(0xf0f0)
     raise BadReply(-1)
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")
@@ -210,9 +211,7 @@ class ServerStateRunning(ServerState):
         self.debugClient.sendContinue()
     elif message.messageType == Message.VMMPanic:
       self.debugClient.setStep()
-      self.debugClient.sendContinue()
-      # self.changeState(ServerStateWaiting(self.debugClient))
-      # self.changeState(ServerStatePanic(self.debugClient))
+      self.changeState(ServerStateWaiting(self.debugClient))
     else:
       raise BadReply(message.messageType)
   def usage(self):
@@ -402,6 +401,26 @@ class ServerStateWaiting(ServerState):
       ], params)
       self.changeState(s)
       s.start()
+    elif input == 'i':
+      if self.debugClient.iOBitmaps:
+        self.debugClient.endIOBitmaps()
+      else:
+        self.debugClient.setIOBitmaps()
+      # Launch the command
+      params = {
+        'iOBitmaps': self.debugClient.iOBitmaps,
+        'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']}
+      }
+      s = ServerStateCommand(self.debugClient, [
+        # Read Proc base exec control VMCS field
+        CommandVMCSRead,
+        # Add or remove MTF flag
+        IOBitmaps,
+        # Write Proc base exec control VMCS field
+        CommandVMCSWrite
+      ], params)
+      self.changeState(s)
+      s.start()
     elif input == 'r':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address length : ",
@@ -435,7 +454,7 @@ class ServerStateWaiting(ServerState):
   def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\nR : Print the regs")
+    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\ni : Toggle I/O bitmaps\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\nR : Print the regs")
 
 class ShellWrite(Shell):
   def __init__(self, debugClient):

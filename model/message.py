@@ -243,6 +243,15 @@ class MessageVMCSData(MessageIn):
       s = s + f.format() + "\n"
     return MessageIn.formatFull(self) + '\n' + s
 
+panic = {
+    0: 'VMM_PANIC_RDMSR',
+    1: 'VMM_PANIC_WRMSR',
+    2: 'VMM_PANIC_CR_ACCESS',
+    3: 'VMM_PANIC_UNKNOWN_CPU_MODE',
+    4: 'VMM_PANIC_IO',
+    5: 'VMM_PANIC_XSETBV'
+};
+
 class MessageVMMPanic(MessageIn):
   def __init__(self):
     MessageIn.__init__(self)
@@ -254,7 +263,7 @@ class MessageVMMPanic(MessageIn):
     self.code = unpack("Q", self.frame.payload[2:10])[0]
     self.extra = unpack("Q", self.frame.payload[10:18])[0]
   def format(self):
-    return "%s Vmm Panic : code %d, extra %d" % (MessageIn.format(self), self.code, self.extra)
+    return "%s Vmm Panic : code %d, extra %d (%s)" % (MessageIn.format(self), self.code, self.extra, panic[self.code])
 
 class MessageVMCSWriteCommit(MessageIn):
   def __init__(self, ok = 0):

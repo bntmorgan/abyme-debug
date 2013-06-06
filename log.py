@@ -9,7 +9,7 @@ fd = open("log", "w")
 # 'ERROR'
 #
 def log(s, level = 'NOTICE'):
-  fd.write("[%d]%s: %s\n" % (time.time() - timestamp, level, s))
+  fd.write("[%06d]%-8s: %s\n" % (time.time() - timestamp, level, s))
 
 def logClose():
   fd.close()

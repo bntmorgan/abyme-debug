@@ -11,7 +11,7 @@ from model.message import *
 from controller.server_state import BadReply, ServerStateRunning
 from config.config import Config
 from model.vmcs import VMCS, VMCSField, VMCSField16
-from log import log, logClose
+import log
 
 class DebugClient():
   def __init__(self, config):
@@ -24,6 +24,9 @@ class DebugClient():
     self.vmcs = None
     self.core = None
     self.serverState = None
+    # flags
+    self.mTF = 0
+    self.iOBitmaps = 0
   def createComponents(self):
     # Create all the components
     self.messages = []
@@ -35,7 +38,8 @@ class DebugClient():
     self.network.debugClient = self
     # Running mode
     self.setStep() # Wait user at every VMExit
-    self.endMTF() # Monitor Trap Flag is activated
+    self.endMTF() # Monitor Trap Flag is desactivated
+    self.endIOBitmaps() # IOBitmaps are desactivated
     # Server state machine : We start with the server running
     self.serverState = ServerStateRunning(self)
     # Create the socket
@@ -46,9 +50,11 @@ class DebugClient():
     self.createComponents()
     self.gui.run()
   def notifyMessage(self, message):
+    log.log("Receiving %s" % (message.__class__.__name__))
     self.addMessage(message)
     self.serverState.notifyMessage(message)
   def sendMessage(self, message):
+    log.log("Sending %s" % (message.__class__.__name__))
     self.network.send(message)
     self.addMessage(message)
   def sendContinue(self):
@@ -69,6 +75,10 @@ class DebugClient():
   def endMTF(self):
     self.mTF = 0
     self.gui.endMTF()
+  def setIOBitmaps(self):
+    self.iOBitmaps = 1
+  def endIOBitmaps(self):
+    self.iOBitmaps = 0
   def addMessage(self, message):
     self.messages.append(message)
     message.number = len(self.messages) - 1
@@ -83,8 +93,12 @@ class DebugClient():
 
 # Debug client main
 try: 
+  log.log('------ STARTUP ------')
   debugClient = DebugClient(Config('config/debug_client.config'))
   debugClient.run()
 except BadReply, msg:
-  logClose()
   print("%s\n" % (msg))
+  log.log(msg, "ERROR")
+finally:
+  log.log('------ GOODBYE ------')
+  log.logClose()

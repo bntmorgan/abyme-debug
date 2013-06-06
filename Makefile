@@ -1,5 +1,6 @@
 all:
 	sudo ./debug_client.py
+	less log
 
 test:
 	sudo ./debug_client_test_server.py
