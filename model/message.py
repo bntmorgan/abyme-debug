@@ -3,6 +3,7 @@ from struct import *
 import socket, sys, math
 from model.core import Core
 from model.vmcs import Encoding
+from model.vmm import basic_exit_reasons
 
 '''
 Message
@@ -135,14 +136,14 @@ class MessageVMExit(MessageIn):
     self.messageType = Message.VMExit 
     self.exitReason = 0xff
   def format(self):
-    return "%s VMExit" % (MessageIn.format(self))
+    return "%s VMExit (%s)" % (MessageIn.format(self), basic_exit_reasons[self.exitReason & 0xffff])
   def unPack(self):
     # unpack exit reason
     MessageIn.unPack(self)
     t = unpack('I', self.frame.payload[2:6])
     self.exitReason = t[0]
   def formatFull(self):
-    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d)" % (self.exitReason, self.exitReason & 0xffff)
+    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d) : %s" % (self.exitReason, self.exitReason & 0xffff, basic_exit_reasons[self.exitReason & 0xffff])
 
 class MessageCoreRegsData(MessageIn):
   def __init__(self):
@@ -247,11 +248,13 @@ class MessageVMMPanic(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.VMMPanic
     self.code = 0
+    self.extra = 0
   def unPack(self):
     MessageIn.unPack(self)
     self.code = unpack("Q", self.frame.payload[2:10])[0]
+    self.extra = unpack("Q", self.frame.payload[10:18])[0]
   def format(self):
-    return "%s Vmm Panic : code %d" % (MessageIn.format(self), self.code)
+    return "%s Vmm Panic : code %d, extra %d" % (MessageIn.format(self), self.code, self.extra)
 
 class MessageVMCSWriteCommit(MessageIn):
   def __init__(self, ok = 0):
