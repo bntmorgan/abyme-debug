@@ -11,6 +11,7 @@ from model.message import *
 from controller.server_state import BadReply, ServerStateRunning
 from config.config import Config
 from model.vmcs import VMCS, VMCSField, VMCSField16
+from log import log, logClose
 
 class DebugClient():
   def __init__(self, config):
@@ -85,4 +86,5 @@ try:
   debugClient = DebugClient(Config('config/debug_client.config'))
   debugClient.run()
 except BadReply, msg:
+  logClose()
   print("%s\n" % (msg))

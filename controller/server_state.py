@@ -4,6 +4,7 @@ from collections import deque
 from model.message import *
 from model.bin import *
 from controller.command import *
+from log import log
 
 class ServerState(object):
   def __init__(self, debugClient):
@@ -15,6 +16,7 @@ class ServerState(object):
   def usage(self):
     raise NotImplementedError("Subclasses should implement this!")
   def changeState(self, serverState):
+    log("%s --> %s" % (self.__class__.__name__, serverState.__class__.__name__))
     self.debugClient.serverState = serverState
 
 class BadReply(BaseException):
