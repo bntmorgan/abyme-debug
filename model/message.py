@@ -244,12 +244,12 @@ class MessageVMCSData(MessageIn):
     return MessageIn.formatFull(self) + '\n' + s
 
 panic = {
-    0: 'VMM_PANIC_RDMSR',
-    1: 'VMM_PANIC_WRMSR',
-    2: 'VMM_PANIC_CR_ACCESS',
-    3: 'VMM_PANIC_UNKNOWN_CPU_MODE',
-    4: 'VMM_PANIC_IO',
-    5: 'VMM_PANIC_XSETBV'
+  0: 'VMM_PANIC_RDMSR',
+  1: 'VMM_PANIC_WRMSR',
+  2: 'VMM_PANIC_CR_ACCESS',
+  3: 'VMM_PANIC_UNKNOWN_CPU_MODE',
+  4: 'VMM_PANIC_IO',
+  5: 'VMM_PANIC_XSETBV'
 };
 
 class MessageVMMPanic(MessageIn):
