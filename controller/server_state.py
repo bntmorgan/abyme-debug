@@ -199,9 +199,10 @@ class ServerStateRunning(ServerState):
   def notifyMessage(self, message):
     # Handle the message according to the type
     if message.messageType == Message.UnhandledVMExit:
-      self.debugClient.setStep()
+      ## self.debugClient.setStep()
       # Server is now waiting
-      self.changeState(ServerStateWaiting(self.debugClient))
+      ## self.changeState(ServerStateWaiting(self.debugClient))
+      self.debugClient.sendContinue()
     elif message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
       if self.debugClient.step:
@@ -212,6 +213,9 @@ class ServerStateRunning(ServerState):
     elif message.messageType == Message.VMMPanic:
       self.debugClient.setStep()
       self.changeState(ServerStateWaiting(self.debugClient))
+    elif message.messageType == Message.LogCR3:
+      # self.debugClient.sendContinue()
+      return
     else:
       raise BadReply(message.messageType)
   def usage(self):
@@ -401,26 +405,6 @@ class ServerStateWaiting(ServerState):
       ], params)
       self.changeState(s)
       s.start()
-    elif input == 'i':
-      if self.debugClient.iOBitmaps:
-        self.debugClient.endIOBitmaps()
-      else:
-        self.debugClient.setIOBitmaps()
-      # Launch the command
-      params = {
-        'iOBitmaps': self.debugClient.iOBitmaps,
-        'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']}
-      }
-      s = ServerStateCommand(self.debugClient, [
-        # Read Proc base exec control VMCS field
-        CommandVMCSRead,
-        # Add or remove MTF flag
-        IOBitmaps,
-        # Write Proc base exec control VMCS field
-        CommandVMCSWrite
-      ], params)
-      self.changeState(s)
-      s.start()
     elif input == 'r':
       self.changeState(ServerStateMinibufShell(self.debugClient, 
         u"Address length : ",
@@ -454,7 +438,7 @@ class ServerStateWaiting(ServerState):
   def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\ni : Toggle I/O bitmaps\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\nR : Print the regs")
+    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\nR : Print the regs")
 
 class ShellWrite(Shell):
   def __init__(self, debugClient):

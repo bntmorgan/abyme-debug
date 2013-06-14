@@ -26,7 +26,6 @@ class DebugClient():
     self.serverState = None
     # flags
     self.mTF = 0
-    self.iOBitmaps = 0
   def createComponents(self):
     # Create all the components
     self.messages = []
@@ -37,9 +36,8 @@ class DebugClient():
     self.gui.debugClient = self
     self.network.debugClient = self
     # Running mode
-    self.setStep() # Wait user at every VMExit
+    self.endStep() # Wait user at every VMExit
     self.endMTF() # Monitor Trap Flag is desactivated
-    self.endIOBitmaps() # IOBitmaps are desactivated
     # Server state machine : We start with the server running
     self.serverState = ServerStateRunning(self)
     # Create the socket
@@ -75,10 +73,6 @@ class DebugClient():
   def endMTF(self):
     self.mTF = 0
     self.gui.endMTF()
-  def setIOBitmaps(self):
-    self.iOBitmaps = 1
-  def endIOBitmaps(self):
-    self.iOBitmaps = 0
   def addMessage(self, message):
     self.messages.append(message)
     message.number = len(self.messages) - 1

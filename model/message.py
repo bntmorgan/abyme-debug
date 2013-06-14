@@ -36,7 +36,8 @@ class Message(object):
       VMMPanic,
       VMCSWrite,
       VMCSWriteCommit,
-  ) = range(16)
+      LogCR3,
+  ) = range(17)
   def __init__(self):
     self.messageType = Message.Message
     # GUI
@@ -116,6 +117,8 @@ class MessageNetwork(Message):
       m = MessageVMCSWrite()
     elif m.messageType == Message.VMCSWriteCommit:
       m = MessageVMCSWriteCommit()
+    elif m.messageType == Message.LogCR3:
+      m = MessageLogCR3()
     #real unpack if changed
     m.frame = frame
     m.unPack()
@@ -165,6 +168,7 @@ class MessageMemoryData(MessageIn):
     self.messageType = Message.MemoryData
     self.address = 0
     self.length = 0
+    self.data = None
   def format(self):
     return "%s MemoryData" % (MessageIn.format(self))
   def unPack(self):
@@ -278,6 +282,32 @@ class MessageVMCSWriteCommit(MessageIn):
     return "%s VMCSWriteCommit" % (MessageIn.format(self))
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nok : %d" % (self.ok)
+
+class MessageLogCR3(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.LogCR3
+    self.length = None
+    self.data = None
+  def format(self):
+    return "%s Log CR3" % (MessageIn.format(self))
+  def unPack(self):
+    MessageIn.unPack(self)
+    t = unpack('Q', self.frame.payload[2:10])
+    self.length = t[0]
+    self.data = self.frame.payload[10:10 + self.length] 
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length, self.dump(16, 0))
+  def dump(self, length, n):
+    src = self.data
+    result=''
+    while src:
+      s,src = src[:length], src[length:]
+      hexa = ' '.join(["%02X" % ord(x) for x in s])
+      s = s.translate(FILTER)
+      result += "%016X   %-*s   %s\n" % (n, length * 3, hexa, s)
+      n += length
+    return result
 
 '''
 Output messages
