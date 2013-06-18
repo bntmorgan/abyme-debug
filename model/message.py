@@ -62,7 +62,8 @@ class MessageNetwork(Message):
   def __init__(self):
     Message.__init__(self)
     self.frame = None
-  def unPack(self):
+  def unPack(self, frame):
+    self.frame = frame
     t = unpack('BB', self.frame.payload[0:2])
     self.messageType = t[0]
     self.coreNumber = t[1]
@@ -84,8 +85,7 @@ class MessageNetwork(Message):
   def createMessage(frame):
     # get the type of the message
     m = MessageIn();
-    m.frame = frame
-    m.unPack()
+    m.unPack(frame)
     # get the real message
     if m.messageType == Message.VMExit:
       m = MessageVMExit()
@@ -121,7 +121,7 @@ class MessageNetwork(Message):
       m = MessageLogCR3()
     #real unpack if changed
     m.frame = frame
-    m.unPack()
+    m.unPack(frame)
     return m
 
 
@@ -140,9 +140,9 @@ class MessageVMExit(MessageIn):
     self.exitReason = 0xff
   def format(self):
     return "%s VMExit (%s)" % (MessageIn.format(self), basic_exit_reasons[self.exitReason & 0xffff])
-  def unPack(self):
+  def unPack(self, frame):
     # unpack exit reason
-    MessageIn.unPack(self)
+    MessageIn.unPack(self, frame)
     t = unpack('I', self.frame.payload[2:6])
     self.exitReason = t[0]
   def formatFull(self):
@@ -155,7 +155,8 @@ class MessageCoreRegsData(MessageIn):
     self.core = Core()
   def format(self):
     return "%s CoreRegsData" % (MessageIn.format(self))
-  def unPack(self):
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     # unpack core data
     self.core.unPack(self.frame.payload[2:])
   def formatFull(self):
@@ -171,8 +172,8 @@ class MessageMemoryData(MessageIn):
     self.data = None
   def format(self):
     return "%s MemoryData" % (MessageIn.format(self))
-  def unPack(self):
-    MessageIn.unPack(self)
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     t = unpack('QQ', self.frame.payload[2:18])
     self.address = t[0]
     self.length = t[1]
@@ -195,8 +196,8 @@ class MessageMemoryWriteCommit(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.MemoryWriteCommit
     self.ok = ok
-  def unPack(self):
-    MessageIn.unPack(self)
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     t = unpack('B', self.frame.payload[2])
     self.ok = t[0]
   def format(self):
@@ -218,8 +219,8 @@ class MessageVMCSData(MessageIn):
     self.vmcs = None
     # Received fields for display purpose
     self.fields = {}
-  def unPack(self):
-    MessageIn.unPack(self)
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     # Copy the VMCS Fields
     data = self.frame.payload[2:]
     s = unpack("B", data[0])[0]
@@ -262,8 +263,8 @@ class MessageVMMPanic(MessageIn):
     self.messageType = Message.VMMPanic
     self.code = 0
     self.extra = 0
-  def unPack(self):
-    MessageIn.unPack(self)
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     self.code = unpack("Q", self.frame.payload[2:10])[0]
     self.extra = unpack("Q", self.frame.payload[10:18])[0]
   def format(self):
@@ -274,8 +275,8 @@ class MessageVMCSWriteCommit(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.VMCSWriteCommit
     self.ok = ok
-  def unPack(self):
-    MessageIn.unPack(self)
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     t = unpack('B', self.frame.payload[2])
     self.ok = t[0]
   def format(self):
@@ -291,8 +292,8 @@ class MessageLogCR3(MessageIn):
     self.data = None
   def format(self):
     return "%s Log CR3" % (MessageIn.format(self))
-  def unPack(self):
-    MessageIn.unPack(self)
+  def unPack(self, frame):
+    MessageIn.unPack(self, frame)
     t = unpack('Q', self.frame.payload[2:10])
     self.length = t[0]
     self.data = self.frame.payload[10:10 + self.length] 
