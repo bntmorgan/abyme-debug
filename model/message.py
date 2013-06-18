@@ -62,9 +62,10 @@ class MessageNetwork(Message):
   def __init__(self):
     Message.__init__(self)
     self.frame = None
-  def unPack(self, frame):
+  def unPack(self, frame, raw):
     self.frame = frame
-    t = unpack('BB', self.frame.payload[0:2])
+    self.raw = raw
+    t = unpack('BB', self.raw[0:2])
     self.messageType = t[0]
     self.coreNumber = t[1]
   def pack(self):
@@ -74,18 +75,18 @@ class MessageNetwork(Message):
     b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]), ord(a[3]), ord(a[4]), ord(a[5]))
     return b
   def format(self):
-    l = "%04d B" % (len(self.frame.payload))
+    l = "%04d B" % (len(self.raw))
     # new length addrSource addrDest type
     return Message.format(self) + "%s %s %s" % (l, MessageNetwork.ethAddr(self.frame.macSource), MessageNetwork.ethAddr(self.frame.macDest))
   def formatFull(self):
-    l = "%04d B" % (len(self.frame.payload))
+    l = "%04d B" % (len(self.raw))
     # new length addrSource addrDest type
     return Message.formatFull(self) + "length : %s\nsrc address : %s\ndest address : %s" % (l, MessageNetwork.ethAddr(self.frame.macSource), MessageNetwork.ethAddr(self.frame.macDest))
   @staticmethod
-  def createMessage(frame):
+  def createMessage(frame, raw):
     # get the type of the message
     m = MessageIn();
-    m.unPack(frame)
+    m.unPack(frame, raw)
     # get the real message
     if m.messageType == Message.VMExit:
       m = MessageVMExit()
@@ -120,8 +121,7 @@ class MessageNetwork(Message):
     elif m.messageType == Message.LogCR3:
       m = MessageLogCR3()
     #real unpack if changed
-    m.frame = frame
-    m.unPack(frame)
+    m.unPack(frame, raw)
     return m
 
 
@@ -140,10 +140,10 @@ class MessageVMExit(MessageIn):
     self.exitReason = 0xff
   def format(self):
     return "%s VMExit (%s)" % (MessageIn.format(self), basic_exit_reasons[self.exitReason & 0xffff])
-  def unPack(self, frame):
+  def unPack(self, frame, raw):
     # unpack exit reason
-    MessageIn.unPack(self, frame)
-    t = unpack('I', self.frame.payload[2:6])
+    MessageIn.unPack(self, frame, raw)
+    t = unpack('I', self.raw[2:6])
     self.exitReason = t[0]
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d) : %s" % (self.exitReason, self.exitReason & 0xffff, basic_exit_reasons[self.exitReason & 0xffff])
@@ -155,10 +155,10 @@ class MessageCoreRegsData(MessageIn):
     self.core = Core()
   def format(self):
     return "%s CoreRegsData" % (MessageIn.format(self))
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
     # unpack core data
-    self.core.unPack(self.frame.payload[2:])
+    self.core.unPack(self.raw[2:])
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nCore regs :\n" + self.core.format()
 
@@ -172,12 +172,12 @@ class MessageMemoryData(MessageIn):
     self.data = None
   def format(self):
     return "%s MemoryData" % (MessageIn.format(self))
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
-    t = unpack('QQ', self.frame.payload[2:18])
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+    t = unpack('QQ', self.raw[2:18])
     self.address = t[0]
     self.length = t[1]
-    self.data = self.frame.payload[18:18 + self.length] 
+    self.data = self.raw[18:18 + self.length] 
   def formatFull(self):
     return MessageIn.formatFull(self) + "\naddress : 0x%x\nlength : 0x%x\n%s" % (self.address, self.length, self.dump(16, self.address))
   def dump(self, length, n):
@@ -196,9 +196,9 @@ class MessageMemoryWriteCommit(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.MemoryWriteCommit
     self.ok = ok
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
-    t = unpack('B', self.frame.payload[2])
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+    t = unpack('B', self.raw[2])
     self.ok = t[0]
   def format(self):
     return "%s WriteCommit" % (MessageIn.format(self))
@@ -219,10 +219,10 @@ class MessageVMCSData(MessageIn):
     self.vmcs = None
     # Received fields for display purpose
     self.fields = {}
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
     # Copy the VMCS Fields
-    data = self.frame.payload[2:]
+    data = self.raw[2:]
     s = unpack("B", data[0])[0]
     while s > 0:
       e = unpack("Q", data[1:9])[0]
@@ -263,10 +263,10 @@ class MessageVMMPanic(MessageIn):
     self.messageType = Message.VMMPanic
     self.code = 0
     self.extra = 0
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
-    self.code = unpack("Q", self.frame.payload[2:10])[0]
-    self.extra = unpack("Q", self.frame.payload[10:18])[0]
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+    self.code = unpack("Q", self.raw[2:10])[0]
+    self.extra = unpack("Q", self.raw[10:18])[0]
   def format(self):
     return "%s Vmm Panic : code %d, extra %d (%s)" % (MessageIn.format(self), self.code, self.extra, panic[self.code])
 
@@ -275,9 +275,9 @@ class MessageVMCSWriteCommit(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.VMCSWriteCommit
     self.ok = ok
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
-    t = unpack('B', self.frame.payload[2])
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+    t = unpack('B', self.raw[2])
     self.ok = t[0]
   def format(self):
     return "%s VMCSWriteCommit" % (MessageIn.format(self))
@@ -292,11 +292,11 @@ class MessageLogCR3(MessageIn):
     self.data = None
   def format(self):
     return "%s Log CR3" % (MessageIn.format(self))
-  def unPack(self, frame):
-    MessageIn.unPack(self, frame)
-    t = unpack('Q', self.frame.payload[2:10])
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+    t = unpack('Q', self.raw[2:10])
     self.length = t[0]
-    self.data = self.frame.payload[10:10 + self.length] 
+    self.data = self.raw[10:10 + self.length] 
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length, self.dump(16, 0))
   def dump(self, length, n):

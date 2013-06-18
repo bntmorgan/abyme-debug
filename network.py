@@ -52,7 +52,7 @@ class Network():
     packet = packet[0]
     frame = EthernetFrame(packet)
     if (frame.protocol == self.ethertype):
-      self.debugClient.notifyMessage(MessageNetwork.createMessage(frame))
+      self.debugClient.notifyMessage(MessageNetwork.createMessage(frame, frame.payload))
       return 1
     return 0
   def send(self, message):
@@ -61,6 +61,7 @@ class Network():
     frame = self.padding(frame)
     self.socket.send(frame)
     message.frame = EthernetFrame(frame)
+    message.raw = message.frame.payload
   def padding(self, frame):
     minlen = 14 + 42 # size of head plus minimum payload
     l = len(frame)
