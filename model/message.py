@@ -297,6 +297,11 @@ class MessageLogCR3(MessageIn):
     t = unpack('Q', self.raw[2:10])
     self.length = t[0]
     self.data = self.raw[10:10 + self.length] 
+    # XXX
+    fd = open("cr3", "w+")
+    fd.write(self.data)
+    fd.close()
+
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length, self.dump(16, 0))
   def dump(self, length, n):
