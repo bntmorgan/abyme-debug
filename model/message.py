@@ -298,7 +298,8 @@ class MessageLogCR3(MessageIn):
     self.length = t[0]
     self.data = self.raw[10:10 + self.length] 
     # XXX
-    fd = open("cr3", "w+")
+    fd = open("cr3", "ab")
+    fd.seek(0, 2)
     fd.write(self.data)
     fd.close()
 
