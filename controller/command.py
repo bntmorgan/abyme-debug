@@ -48,7 +48,7 @@ class CommandMemoryWrite(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.write)
   def write(self):
-    self.sendAndReceive(MessageMemoryWrite(self.params['address'], self.params['memory']), MessageMemoryWriteCommit)
+    self.sendAndReceive(MessageMemoryWrite(self.params['address'], self.params['memory']), MessageCommit)
     self.next(self.receive)
   def receive(self):
     self.params['ok'] = self.message.ok
@@ -75,7 +75,7 @@ class CommandVMCSWrite(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.vMCSWrite)
   def vMCSWrite(self):
-    self.sendAndReceive(MessageVMCSWrite(self.params['fields']), MessageVMCSWriteCommit)
+    self.sendAndReceive(MessageVMCSWrite(self.params['fields']), MessageCommit)
     self.next(self.receive)
   def receive(self):
     self.params['ok'] = self.message.ok

@@ -23,11 +23,11 @@ class Message(object):
       Message,
       VMExit,
       ExecContinue,
-      ExecStep,
+      ExecStep, #unsed
       MemoryRead,
       MemoryData,
       MemoryWrite,
-      MemoryWriteCommit,
+      Commit, #ACK
       CoreRegsRead,
       CoreRegsData,
       UnhandledVMExit,
@@ -35,9 +35,8 @@ class Message(object):
       VMCSData,
       VMMPanic,
       VMCSWrite,
-      VMCSWriteCommit,
       LogCR3,
-  ) = range(17)
+  ) = range(16)
   def __init__(self):
     self.messageType = Message.Message
     # GUI
@@ -100,8 +99,8 @@ class MessageNetwork(Message):
       m = MessageMemoryData()
     elif m.messageType == Message.MemoryWrite:
       m = MessageMemoryWrite()
-    elif m.messageType == Message.MemoryWriteCommit:
-      m = MessageMemoryWriteCommit()
+    elif m.messageType == Message.Commit:
+      m = MessageCommit()
     elif m.messageType == Message.CoreRegsRead:
       m = MessageCoreRegsRead()
     elif m.messageType == Message.CoreRegsData:
@@ -116,8 +115,6 @@ class MessageNetwork(Message):
       m = MessageVMMPanic()
     elif m.messageType == Message.VMCSWrite:
       m = MessageVMCSWrite()
-    elif m.messageType == Message.VMCSWriteCommit:
-      m = MessageVMCSWriteCommit()
     elif m.messageType == Message.LogCR3:
       m = MessageLogCR3()
     #real unpack if changed
@@ -191,17 +188,17 @@ class MessageMemoryData(MessageIn):
       n += length
     return result
 
-class MessageMemoryWriteCommit(MessageIn):
+class MessageCommit(MessageIn):
   def __init__(self, ok = 0):
     MessageIn.__init__(self)
-    self.messageType = Message.MemoryWriteCommit
+    self.messageType = Message.Commit
     self.ok = ok
   def unPack(self, frame, raw):
     MessageIn.unPack(self, frame, raw)
     t = unpack('B', self.raw[2])
     self.ok = t[0]
   def format(self):
-    return "%s WriteCommit" % (MessageIn.format(self))
+    return "%s Commit" % (MessageIn.format(self))
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nok : %d" % (self.ok)
 
@@ -269,20 +266,6 @@ class MessageVMMPanic(MessageIn):
     self.extra = unpack("Q", self.raw[10:18])[0]
   def format(self):
     return "%s Vmm Panic : code %d, extra %d (%s)" % (MessageIn.format(self), self.code, self.extra, panic[self.code])
-
-class MessageVMCSWriteCommit(MessageIn):
-  def __init__(self, ok = 0):
-    MessageIn.__init__(self)
-    self.messageType = Message.VMCSWriteCommit
-    self.ok = ok
-  def unPack(self, frame, raw):
-    MessageIn.unPack(self, frame, raw)
-    t = unpack('B', self.raw[2])
-    self.ok = t[0]
-  def format(self):
-    return "%s VMCSWriteCommit" % (MessageIn.format(self))
-  def formatFull(self):
-    return MessageIn.formatFull(self) + "\nok : %d" % (self.ok)
 
 class MessageLogCR3(MessageIn):
   def __init__(self):
