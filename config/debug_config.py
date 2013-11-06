@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 #import itertools, sys, curses, os, pprint
 import sys, os
