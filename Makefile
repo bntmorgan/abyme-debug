@@ -1,4 +1,6 @@
 all:
+	# sakura -x "sudo tcpdump -i eth0"&
+	wireshark -R "eth.type == 0xb00b" -f "ether proto 0xb00b" -X lua_script:../tools/wireshark/dissector.lua -i eth0 &	
 	sudo ./debug_client.py
 	less log
 
