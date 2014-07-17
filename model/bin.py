@@ -32,7 +32,8 @@ class Bin(object):
       '-b', 'binary',
       '-mi386',
       '--adjust-vma', '0x%x' % (self.address),
-      '-Maddr16,data16',
+      '-Mx86-64',
+      #'-Maddr16,data16',
       '-D', self.file.name,
     ])
   def disasm(self):
