@@ -181,6 +181,8 @@ class ShellRead(Shell):
     return []
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address and size 0xffffffff 0x1000 and carriage return")
+  def cancel(self):
+    pass
 
 class ServerStateRunning(ServerState):
   def __init__(self, debugClient):
@@ -240,6 +242,8 @@ class ShellSetLine(Shell):
     return []
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type a number a line")
+  def cancel(self):
+    pass
 
 class TestRegex(object):
   def __init__(self):
@@ -360,6 +364,8 @@ class ShellVMCS(Shell):
     return c
   def usage(self):
     self.debugClient.gui.display("Usage()\n type a VMCS Field name and carriage return")
+  def cancel(self):
+    pass
 
 class ServerStateWaiting(ServerState):
   def __init__(self, debugClient):
@@ -467,6 +473,8 @@ class ShellWrite(Shell):
     return []
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address, some data to write 0xffffffff 0x1000 and carriage return")
+  def cancel(self):
+    pass
 
 class ShellLinearToPhysical(Shell): 
   def __init__(self, debugClient):
@@ -498,6 +506,8 @@ class ShellLinearToPhysical(Shell):
     return []
   def usage(self):
     self.debugClient.gui.display("Usage()\n type an address and a carriage return")
+  def cancel(self):
+    pass
 
 class ServerStatePanic(ServerState):
   def __init__(self, debugClient):
