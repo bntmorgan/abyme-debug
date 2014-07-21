@@ -196,6 +196,10 @@ class ServerStateRunning(ServerState):
       self.debugClient.setStep()
     elif input == 'f':
       self.changeState(ServerStateWaiting(self.debugClient))
+    elif input == 'up':
+      self.debugClient.gui.messageFocusDec()
+    elif input == 'down':
+      self.debugClient.gui.messageFocusInc()
     else:
       self.usage()
   def notifyMessage(self, message):
@@ -216,6 +220,9 @@ class ServerStateRunning(ServerState):
       self.debugClient.setStep()
       self.changeState(ServerStateWaiting(self.debugClient))
     elif message.messageType == Message.LogCR3:
+      # self.debugClient.sendContinue()
+      return
+    elif message.messageType == Message.Info:
       # self.debugClient.sendContinue()
       return
     else:

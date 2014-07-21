@@ -10,6 +10,7 @@ fd = open("log", "w")
 #
 def log(s, level = 'NOTICE'):
   fd.write("[%06d]%-8s: %s\n" % (time.time() - timestamp, level, s))
+  fd.flush()
 
 def logClose():
   fd.close()

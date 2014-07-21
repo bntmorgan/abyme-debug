@@ -80,7 +80,7 @@ class DebugClient():
     self.gui.notifyMessage(message)
     self.gui.messageFocus(message.number)
   def info(self, label, text):
-    self.addMessage(MessageInfo(label, text))
+    self.addMessage(Info(label, text))
   def cacheExpired(self):
     self.core = None
     self.vmcs = VMCS.createVMCS()

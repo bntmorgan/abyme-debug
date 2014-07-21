@@ -55,10 +55,12 @@ class Network():
       self.debugClient.notifyMessage(MessageNetwork.createMessage(frame, frame.payload))
       return 1
     return 0
+  def createFrame(self, payload):
+    return self.padding(pack('!6s6sH', self.macDest, self.macSource,
+      self.ethertype) + payload)
   def send(self, message):
     payload = message.pack()
-    frame = pack('!6s6sH', self.macDest, self.macSource, self.ethertype) + payload
-    frame = self.padding(frame)
+    frame = self.createFrame(payload)
     self.socket.send(frame)
     message.frame = EthernetFrame(frame)
     message.raw = message.frame.payload

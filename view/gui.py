@@ -6,6 +6,8 @@ import urwid
 
 from model.message import Message
 
+import log
+
 class Gui():
   banner = """
                                                                 ____                  
@@ -57,6 +59,7 @@ class Gui():
         ('text', 'dark cyan', 'black'),
         ('reveal focus', 'black', 'dark cyan', 'standout')]
     self.initGraphicalComponents()
+
   def initGraphicalComponents(self):
     self.listContent = urwid.SimpleListWalker([])
     self.listBox = urwid.ListBox(self.listContent)
@@ -108,10 +111,12 @@ class Gui():
   def focusList(self):
     self.top.focus_position = 0
   def messageFocusInc(self):
+    log.log("Inc")
     if len(self.debugClient.messages) > 0 and self.listBox.focus_position < len(self.debugClient.messages) - 1:
       self.focusList()
       self.listBox.focus_position += 1
   def messageFocusDec(self):
+    log.log("Dec")
     if len(self.debugClient.messages) > 0 and self.listBox.focus_position > 0:
       self.focusList()
       self.listBox.focus_position -= 1

@@ -17,13 +17,19 @@ class BadVMCSFieldSize(BaseException):
   def __str__(self):
     return "Bad message usage"
 
-class Message(object):
+class ListItem(object):
+  def format(self):
+    return "%04d %d " % (self.number, self.coreNumber)
+  def formatFull(self):
+    return "number : %04d\ncore : %d\n" % (self.number, self.coreNumber)
+
+class Message(ListItem):
   # Message Types
   (
       Message,
       VMExit,
       ExecContinue,
-      ExecStep, #unsed
+      Info,
       MemoryRead,
       MemoryData,
       MemoryWrite,
@@ -42,12 +48,8 @@ class Message(object):
     # GUI
     self.number = 0
     self.coreNumber = 0
-  def format(self):
-    return "%04d %d " % (self.number, self.coreNumber)
-  def formatFull(self):
-    return "number : %04d\ncore : %d\n" % (self.number, self.coreNumber)
 
-class MessageInfo(Message):
+class Info(ListItem):
   def __init__(self, label, message):
     Message.__init__(self)
     self.label = label
@@ -91,8 +93,8 @@ class MessageNetwork(Message):
       m = MessageVMExit()
     elif m.messageType == Message.ExecContinue:
       m = MessageExecContinue()
-    elif m.messageType == Message.ExecStep:
-      m = MessageExecStep()
+    elif m.messageType == Message.Info:
+      m = MessageInfo()
     elif m.messageType == Message.MemoryRead:
       m = MessageMemoryRead()
     elif m.messageType == Message.MemoryData:
@@ -158,6 +160,23 @@ class MessageCoreRegsData(MessageIn):
     self.core.unPack(self.raw[2:])
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nCore regs :\n" + self.core.format()
+
+class MessageInfo(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.Info
+    self.length = 0
+    self.data = None
+  def format(self):
+    return "%s MessageInfo" % (MessageIn.format(self))
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+    t = unpack('Q', self.raw[2:10])
+    self.length = t[0]
+    self.data = self.raw[10:10 + self.length] 
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length,
+      self.data)
 
 FILTER=''.join([(len(repr(chr(x))) == 3) and chr(x) or '.' for x in range(256)])
 class MessageMemoryData(MessageIn):
