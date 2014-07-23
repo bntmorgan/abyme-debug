@@ -177,6 +177,8 @@ class MessageInfo(MessageIn):
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length,
       self.data)
+  def getString(self):
+    return self.data
 
 FILTER=''.join([(len(repr(chr(x))) == 3) and chr(x) or '.' for x in range(256)])
 class MessageMemoryData(MessageIn):
