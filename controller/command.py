@@ -169,6 +169,18 @@ class MTF(Command):
     self.field.value = (self.field.value & ((self.mTF << 27) | ~(1 << 27))) | (self.mTF << 27)
     self.params['fields']['CPU_BASED_VM_EXEC_CONTROL'].value = self.field.value
 
+class VPT(Command):
+  def __init__(self, params):
+    Command.__init__(self, params)
+    # mTF bit
+    self.vPT = self.params['vPT']
+    # Fields
+    self.field = self.params['fields']['PIN_BASED_VM_EXEC_CONTROL']
+  # Algorithm steps
+  def execute(self):
+    self.field.value = (self.field.value & ((self.vPT << 6) | ~(1 << 6))) | (self.vPT << 6)
+    self.params['fields']['PIN_BASED_VM_EXEC_CONTROL'].value = self.field.value
+
 class IOBitmaps(Command):
   def __init__(self, params):
     Command.__init__(self, params)

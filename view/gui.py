@@ -53,6 +53,7 @@ class Gui():
     self.bottomBar = None
     self.execMode = None
     self.mTF = None
+    self.vPT = None
     self.palette = [
         ('header', 'white', 'black'),
         ('flags', 'dark cyan', 'black'),
@@ -72,10 +73,13 @@ class Gui():
     self.execMode = urwid.Text("")
     self.setStep()
     self.mTF = urwid.Text("")
+    self.vPT = urwid.Text("")
     self.endMTF()
+    self.setVPT()
     widgetsColumns = [
         (9, urwid.AttrMap(self.execMode, 'flags')), 
-        (10, urwid.AttrMap(self.mTF, 'flags'))]
+        (10, urwid.AttrMap(self.mTF, 'flags')),
+        (11, urwid.AttrMap(self.vPT, 'flags'))]
     self.bottomBar = urwid.Columns(widgetsColumns)
     widgetsPile = [
         urwid.Frame(self.listBox, head, bottom),
@@ -134,4 +138,8 @@ class Gui():
     self.mTF.set_text("MTF : ON ")
   def endMTF(self):
     self.mTF.set_text("MTF : OFF")
+  def setVPT(self):
+    self.vPT.set_text("VPT : ON ")
+  def endVPT(self):
+    self.vPT.set_text("VPT : OFF")
 

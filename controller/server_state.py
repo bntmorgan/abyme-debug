@@ -398,6 +398,26 @@ class ServerStateWaiting(ServerState):
       self.changeState(ServerStateRunning(self.debugClient))
       # Expire the cache
       self.debugClient.cacheExpired()
+    elif input == 'v':
+      if self.debugClient.vPT:
+        self.debugClient.endVPT()
+      else:
+        self.debugClient.setVPT()
+      # Launch the command
+      params = {
+        'vPT': self.debugClient.vPT,
+        'fields': {'PIN_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['PIN_BASED_VM_EXEC_CONTROL']}
+      }
+      s = ServerStateCommand(self.debugClient, [
+        # Read Pin bases exec control VMCS field
+        CommandVMCSRead,
+        # Add or remove VPT flag
+        VPT,
+        # Write Pin based exec control VMCS field
+        CommandVMCSWrite
+      ], params)
+      self.changeState(s)
+      s.start()
     elif input == 't':
       if self.debugClient.mTF:
         self.debugClient.endMTF()
@@ -409,11 +429,11 @@ class ServerStateWaiting(ServerState):
         'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']}
       }
       s = ServerStateCommand(self.debugClient, [
-        # Read Proc base exec control VMCS field
+        # Read Proc based exec control VMCS field
         CommandVMCSRead,
         # Add or remove MTF flag
         MTF,
-        # Write Proc base exec control VMCS field
+        # Write Proc based exec control VMCS field
         CommandVMCSWrite
       ], params)
       self.changeState(s)
@@ -451,7 +471,19 @@ class ServerStateWaiting(ServerState):
   def notifyMessage(self, message):
     raise BadReply(-1)
   def usage(self):
-    self.debugClient.gui.display("Usage()\ns : Step execution\nc : Continue execution\nh : Help\nt : Toggle monitor trap flag\nr : Dump memory\nw : Write memory\nd : try to disassemble data\np : print raw message data\nR : Print the regs")
+    self.debugClient.gui.display("""\
+Usage()
+s : Step execution
+c : Continue execution
+h : Help
+t : Toggle monitor trap flag
+v : Toggle VMX preemption timer
+r : Dump memory
+w : Write memory
+d : try to disassemble data
+p : print raw message dat
+R : Print the regs
+""")
 
 class ShellWrite(Shell):
   def __init__(self, debugClient):
