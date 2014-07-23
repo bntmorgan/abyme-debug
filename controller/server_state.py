@@ -480,9 +480,10 @@ t : Toggle monitor trap flag
 v : Toggle VMX preemption timer
 r : Dump memory
 w : Write memory
-d : try to disassemble data
-p : print raw message dat
+d : Try to disassemble data
+p : Print raw message dat
 R : Print the regs
+q : Quit
 """)
 
 class ShellWrite(Shell):
