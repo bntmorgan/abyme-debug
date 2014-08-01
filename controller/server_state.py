@@ -346,7 +346,7 @@ class ServerStateShell(ServerStateMinibuf):
     else:
       self.shell = None
 
-class ShellVMCS(Shell): 
+class ShellVMCS(Shell):
   def __init__(self, debugClient):
     Shell.__init__(self, debugClient)
     self.f = None
@@ -406,13 +406,18 @@ class ServerStateWaiting(ServerState):
       # Launch the command
       params = {
         'vPT': self.debugClient.vPT,
-        'fields': {'PIN_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['PIN_BASED_VM_EXEC_CONTROL']}
+        'fields': {
+          'PIN_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['PIN_BASED_VM_EXEC_CONTROL'],
+          'VM_EXIT_CONTROLS': self.debugClient.vmcs.fields['VM_EXIT_CONTROLS']
+        }
       }
       s = ServerStateCommand(self.debugClient, [
         # Read Pin bases exec control VMCS field
         CommandVMCSRead,
         # Add or remove VPT flag
         VPT,
+        # Add or remove VPT save on exit flag
+        VPTSave,
         # Write Pin based exec control VMCS field
         CommandVMCSWrite
       ], params)
@@ -439,11 +444,11 @@ class ServerStateWaiting(ServerState):
       self.changeState(s)
       s.start()
     elif input == 'r':
-      self.changeState(ServerStateMinibufShell(self.debugClient, 
+      self.changeState(ServerStateMinibufShell(self.debugClient,
         u"Address length : ",
         ShellRead(self.debugClient)))
     elif input == 'w':
-      self.changeState(ServerStateMinibufShell(self.debugClient, 
+      self.changeState(ServerStateMinibufShell(self.debugClient,
         u"Address data : ",
         ShellWrite(self.debugClient)))
     elif input == 'd':
@@ -516,7 +521,7 @@ class ShellWrite(Shell):
   def cancel(self):
     pass
 
-class ShellLinearToPhysical(Shell): 
+class ShellLinearToPhysical(Shell):
   def __init__(self, debugClient):
     Shell.__init__(self, debugClient)
     self.linear = 0x0

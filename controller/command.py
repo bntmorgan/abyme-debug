@@ -1,7 +1,7 @@
 from model.message import *
 
 #
-# The command object doesn't need to be interfaced with the 
+# The command object doesn't need to be interfaced with the
 # user only controller stuff
 # I/O parameters are passed threw a dict
 #
@@ -172,7 +172,7 @@ class MTF(Command):
 class VPT(Command):
   def __init__(self, params):
     Command.__init__(self, params)
-    # mTF bit
+    # vPT bit
     self.vPT = self.params['vPT']
     # Fields
     self.field = self.params['fields']['PIN_BASED_VM_EXEC_CONTROL']
@@ -180,6 +180,18 @@ class VPT(Command):
   def execute(self):
     self.field.value = (self.field.value & ((self.vPT << 6) | ~(1 << 6))) | (self.vPT << 6)
     self.params['fields']['PIN_BASED_VM_EXEC_CONTROL'].value = self.field.value
+
+class VPTSave(Command):
+  def __init__(self, params):
+    Command.__init__(self, params)
+    # vPT bit
+    self.vPT = self.params['vPT']
+    # Fields
+    self.field = self.params['fields']['VM_EXIT_CONTROLS']
+  # Algorithm steps
+  def execute(self):
+    self.field.value = (self.field.value & ((self.vPT << 22) | ~(1 << 22))) | (self.vPT << 22)
+    self.params['fields']['VM_EXIT_CONTROLS'].value = self.field.value
 
 class IOBitmaps(Command):
   def __init__(self, params):
