@@ -36,7 +36,7 @@ class ServerStateMinibuf(ServerState):
     self.input = urwid.Edit(self.label, u"")
     self.bottomBar.contents.append((self.input, self.bottomBar.options()))
     # urwid.connect_signal(self.input, "change", self.changed)
-    self.bottomBar.focus_position = 2
+    self.bottomBar.focus_position = 3
     self.debugClient.gui.focusMinibuf()
   def removeInput(self):
     self.bottomBar.contents.pop()
