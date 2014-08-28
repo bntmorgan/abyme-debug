@@ -62,6 +62,13 @@ class CommandCoreRegsRead(CommandMultiple):
   def receive(self):
     self.params['core'] = self.message.core
 
+class CommandReadFromRIP(Command):
+  def __init__(self, params):
+    Command.__init__(self, params)
+  def execute(self):
+    self.params['address'] = self.params['core'].regs.rip
+    self.params['length'] = 0x100
+
 class CommandVMCSRead(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.vMCSRead)

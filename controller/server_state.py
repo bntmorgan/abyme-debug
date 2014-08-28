@@ -377,6 +377,15 @@ class ShellVMCS(Shell):
 class ServerStateWaiting(ServerState):
   def __init__(self, debugClient):
     ServerState.__init__(self, debugClient)
+  def disassemble(self):
+    # Disassemble the last message on the gui
+    if len(self.debugClient.messages) == 0:
+      return
+    m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
+    if isinstance(m, MessageMemoryData):
+      b = Bin(m.data, 0)
+      self.debugClient.gui.display(b.disasm())
+      b = None
   def notifyUserInput(self, input):
     if input in ('q', 'Q'):
       raise urwid.ExitMainLoop()
@@ -452,13 +461,20 @@ class ServerStateWaiting(ServerState):
         u"Address data : ",
         ShellWrite(self.debugClient)))
     elif input == 'd':
-      if len(self.debugClient.messages) == 0:
-        return
-      m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
-      if isinstance(m, MessageMemoryData):
-        b = Bin(m.data, 0)
-        self.debugClient.gui.display(b.disasm())
-        b = None
+      self.disassemble()
+    elif input == 'D':
+      # Launch the command
+      s = ServerStateCommand(self.debugClient, [
+        # Reads the core
+        CommandCoreRegsRead,
+        # Write RIP for memory read
+        CommandReadFromRIP,
+        # Memory read
+        CommandMemoryRead,
+      ], {})
+      self.changeState(s)
+      s.start()
+      self.disassemble()
     elif input == 'p':
       if len(self.debugClient.messages) == 0:
         return
