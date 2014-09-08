@@ -49,7 +49,7 @@ class Message(ListItem):
     self.number = 0
     self.coreNumber = 0
 
-class Info(ListItem):
+class Info(Message):
   def __init__(self, label, message):
     Message.__init__(self)
     self.label = label
@@ -135,7 +135,7 @@ class MessageIn(MessageNetwork):
 class MessageVMExit(MessageIn):
   def __init__(self):
     MessageIn.__init__(self)
-    self.messageType = Message.VMExit 
+    self.messageType = Message.VMExit
     self.exitReason = 0xff
   def format(self):
     return "%s VMExit (%s)" % (MessageIn.format(self), basic_exit_reasons[self.exitReason & 0xffff])
@@ -173,7 +173,7 @@ class MessageInfo(MessageIn):
     MessageIn.unPack(self, frame, raw)
     t = unpack('Q', self.raw[2:10])
     self.length = t[0]
-    self.data = self.raw[10:10 + self.length] 
+    self.data = self.raw[10:10 + self.length]
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length,
       self.data)
@@ -195,7 +195,7 @@ class MessageMemoryData(MessageIn):
     t = unpack('QQ', self.raw[2:18])
     self.address = t[0]
     self.length = t[1]
-    self.data = self.raw[18:18 + self.length] 
+    self.data = self.raw[18:18 + self.length]
   def formatFull(self):
     return MessageIn.formatFull(self) + "\naddress : 0x%x\nlength : 0x%x\n%s" % (self.address, self.length, self.dump(16, self.address))
   def dump(self, length, n):
@@ -300,7 +300,7 @@ class MessageLogCR3(MessageIn):
     MessageIn.unPack(self, frame, raw)
     t = unpack('Q', self.raw[2:10])
     self.length = t[0]
-    self.data = self.raw[10:10 + self.length] 
+    self.data = self.raw[10:10 + self.length]
     # XXX
     fd = open("cr3", "ab")
     fd.seek(0, 2)
