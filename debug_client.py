@@ -25,6 +25,7 @@ class DebugClient():
     self.core = None
     self.serverState = None
     # flags
+    self.step = 0
     self.mTF = 0
     self.vPT = 1 # Enabled in the hypervisor
   def createComponents(self):
