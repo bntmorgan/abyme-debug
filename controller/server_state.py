@@ -133,8 +133,9 @@ class ServerStateCommand(ServerStateReply):
     self.execute()
   def execute(self):
     while 1:
+      self.command.finished = True
       self.command.execute()
-      if self.commandFinished():
+      if self.isCommandFinished():
         if self.isCommandNext():
           self.commands.popleft()
           self.command = self.commands[0](self.params)
@@ -142,7 +143,7 @@ class ServerStateCommand(ServerStateReply):
           # Finally finished
           self.changeState(ServerStateWaiting(self.debugClient))
           break
-      else:
+      elif self.isCommandExpected():
         self.send()
         self.command.message = None
         self.command.expected = None
@@ -152,8 +153,10 @@ class ServerStateCommand(ServerStateReply):
     self.debugClient.sendMessage(self.command.messageOut)
   def isCommandNext(self):
     return len(self.commands) > 1
-  def commandFinished(self):
-    return self.command.expected == None or self.command.messageOut == None
+  def isCommandFinished(self):
+    return self.command.finished
+  def isCommandExpected(self):
+    return self.command.expected != None or self.command.messageOut != None
 
 class ShellRead(Shell):
   def __init__(self, debugClient):
@@ -161,26 +164,29 @@ class ShellRead(Shell):
     # Memory request values
     self.address = 0
     self.length = 0
+    self.filename = None
   def validate(self, t):
     t = t.rsplit(' ')
-    if len(t) != 2:
+    if len(t) < 2:
       return 0
     try:
       self.address = int(t[0], 0)
       self.length = int(t[1], 0)
     except:
       return 0
+    if len(t) == 3:
+      self.filename = t[2]
     return 1
   def submit(self):
     s = ServerStateCommand(self.debugClient, [CommandMemoryRead],
-      {'address': self.address, 'length': self.length, 'memory': None})
+      {'address': self.address, 'length': self.length, 'filename': self.filename})
     self.changeState(s)
     s.start()
   def complete(self, t):
     self.usage()
     return []
   def usage(self):
-    self.debugClient.gui.display("Usage()\n Type an address and size 0xffffffff 0x1000 and carriage return")
+    self.debugClient.gui.display("Usage()\n Type an address, size and filename if needed")
   def cancel(self):
     pass
 

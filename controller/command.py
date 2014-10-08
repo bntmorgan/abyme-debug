@@ -16,11 +16,14 @@ class Command(object):
     self.messageOut = None
     # Class of the message to receive before the next execution
     self.expected = None
+    # Command finished ?
+    self.finished = False
   def execute(self):
     raise NotImplementedError("Subclasses should implement this!")
   def sendAndReceive(self, message, expected):
     self.messageOut = message
     self.expected = expected
+    self.finished = False
   def info(self, label, text):
     if self.params['debugClient']:
       self.params['debugClient'].info(label, text)
@@ -34,15 +37,38 @@ class CommandMultiple(Command):
     self.current()
   def next(self, next):
     self.current = next
+    self.finished = False
 
 class CommandMemoryRead(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.read)
+    self.cAddress = self.params['address']
+    self.tLen = self.params['length']
+    self.cLen = 0x0 
+    if self.params['filename'] != None:
+      try:
+        self.file = open(self.params['filename'], "w")
+      except:
+        self.file = None
+    else:
+      self.file = None
   def read(self):
-    self.sendAndReceive(MessageMemoryRead(self.params['address'], self.params['length']), MessageMemoryData)
+    # self.info("CommandMemoryRead : read", "cLen %d" % self.cLen)
+    l = 0x400 if 0x400 < self.tLen - self.cLen else self.tLen - self.cLen 
+    self.sendAndReceive(MessageMemoryRead(self.cAddress, l), MessageMemoryData)
+    self.cLen = self.cLen + l
+    self.cAddress = self.cAddress + l
     self.next(self.receive)
   def receive(self):
-    self.params['memory'] = self.message.data
+    # self.info("CommandMemoryRead : receive", "cLen %d" % self.cLen)
+    if self.file != None:
+      self.file.write(self.message.data)
+      self.file.flush()
+    if (self.cLen == self.tLen):
+      if self.file != None:
+        self.file.close()
+    else:
+      self.next(self.read)
 
 class CommandMemoryWrite(CommandMultiple):
   def __init__(self, params):
@@ -180,7 +206,7 @@ class LinearToPhysical(CommandMultiple):
     if not (self.PTE & (1 << 0)):
       self.info("Page Walk", "Unsupported not present PTE")
     else:
-      self.physical = (self.PDE & 0x000ffffffffff000) + (self.linear & 0x0000000000000fff)
+      self.physical = (self.PTE & 0x000ffffffffff000) + (self.linear & 0x0000000000000fff)
       self.info("Page Walk", "4KB page physical address : %016x" % (self.physical))
 
 class MTF(Command):
