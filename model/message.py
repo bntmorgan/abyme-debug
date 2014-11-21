@@ -41,7 +41,7 @@ class Message(ListItem):
       VMCSData,
       VMMPanic,
       VMCSWrite,
-      LogCR3,
+      UserDefined,
   ) = range(16)
   def __init__(self):
     self.messageType = Message.Message
@@ -117,8 +117,8 @@ class MessageNetwork(Message):
       m = MessageVMMPanic()
     elif m.messageType == Message.VMCSWrite:
       m = MessageVMCSWrite()
-    elif m.messageType == Message.LogCR3:
-      m = MessageLogCR3()
+    elif m.messageType == Message.UserDefined:
+      m = MessageUserDefined()
     #real unpack if changed
     m.unPack(frame, raw)
     return m
@@ -288,27 +288,29 @@ class MessageVMMPanic(MessageIn):
   def format(self):
     return "%s Vmm Panic : code %d, extra %d (%s)" % (MessageIn.format(self), self.code, self.extra, panic[self.code])
 
-class MessageLogCR3(MessageIn):
+class MessageUserDefined(MessageIn):
+  # Message Types
+  (
+      LogCR3,
+      LogMD5,
+  ) = range(2)
   def __init__(self):
     MessageIn.__init__(self)
-    self.messageType = Message.LogCR3
+    self.messageType = Message.UserDefined
+    self.userType = None
     self.length = None
     self.data = None
   def format(self):
-    return "%s Log CR3" % (MessageIn.format(self))
+    return "%s User Defined" % (MessageIn.format(self))
   def unPack(self, frame, raw):
     MessageIn.unPack(self, frame, raw)
-    t = unpack('Q', self.raw[2:10])
+    t = unpack('H', self.raw[2:4])
+    self.userType = t[0]
+    t = unpack('Q', self.raw[4:12])
     self.length = t[0]
-    self.data = self.raw[10:10 + self.length]
-    # XXX
-    fd = open("cr3", "ab")
-    fd.seek(0, 2)
-    fd.write(self.data)
-    fd.close()
-
+    self.data = self.raw[12:12 + self.length]
   def formatFull(self):
-    return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length, self.dump(16, 0))
+    return MessageIn.formatFull(self) + "\nuserType : 0x%x\nlength : 0x%x\n%s" % (self.userType, self.length, self.dump(16, 0))
   def dump(self, length, n):
     src = self.data
     result=''

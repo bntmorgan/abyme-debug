@@ -5,6 +5,8 @@ from model.message import *
 from model.bin import *
 from controller.command import *
 import log
+import stat
+from network import Network
 
 class ServerState(object):
   def __init__(self, debugClient):
@@ -225,11 +227,15 @@ class ServerStateRunning(ServerState):
     elif message.messageType == Message.VMMPanic:
       self.debugClient.setStep()
       self.changeState(ServerStateWaiting(self.debugClient))
-    elif message.messageType == Message.LogCR3:
-      # self.debugClient.sendContinue()
+    elif message.messageType == Message.UserDefined:
+      if message.userType == MessageUserDefined.LogCR3:
+        # Send to gui
+        Network.sendTo(5000, message.data)
+      elif message.userType == MessageUserDefined.LogMD5:
+        # Send to gui
+        Network.sendTo(5002, message.data)
       return
     elif message.messageType == Message.Info:
-      # self.debugClient.sendContinue()
       return
     else:
       raise BadReply(message.messageType)

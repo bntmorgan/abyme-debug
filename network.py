@@ -35,6 +35,12 @@ class Network():
     for b in t:
       m += '%c' % (int(b, 16))
     return m
+  @staticmethod
+  def sendTo(port, data):
+    sock = socket.socket(socket.AF_INET, # Internet
+                         socket.SOCK_DGRAM) # UDP
+    sock.sendto(data, ("127.0.0.1", port))
+    sock.close()
   def createSocket(self):
     # Get the ethertype from configuration
     self.ethertype = int(self.debugClient.config['ETHERTYPE'], 16)
