@@ -88,11 +88,17 @@ class CommandCoreRegsRead(CommandMultiple):
   def receive(self):
     self.params['core'] = self.message.core
 
-class CommandReadFromRIP(Command):
+class CommandWalkFromRIP(Command):
   def __init__(self, params):
     Command.__init__(self, params)
   def execute(self):
-    self.params['address'] = self.params['core'].regs.rip
+    self.params['linear'] = self.params['core'].regs.rip
+
+class CommandReadFromPhysical(Command):
+  def __init__(self, params):
+    Command.__init__(self, params)
+  def execute(self):
+    self.params['address'] = self.params['physical']
     self.params['length'] = 0x100
 
 class CommandVMCSRead(CommandMultiple):
@@ -119,7 +125,7 @@ class LinearToPhysical(CommandMultiple):
     # The address to convert
     self.linear = self.params['linear']
     # The result
-    self.physical = 0
+    self.params['physical'] = 0
     # Algorithm data
     self.core = None
     self.IA32_EFER = None
@@ -139,7 +145,7 @@ class LinearToPhysical(CommandMultiple):
     self.core = self.params['core']
     # Pagination activated ?
     if not (self.core.regs.cr0 & (1 << 0) and self.core.regs.cr0 & (1 << 31)):
-      self.physical = self.linear
+      self.params['physical'] = self.linear
       self.info("Page Walk", "Pagination is not activated : %016x" % (self.physical))
       return
     # 32-Bit Paging
@@ -178,8 +184,8 @@ class LinearToPhysical(CommandMultiple):
     if not (self.PDPTE & (1 << 0)):
       self.info("Page Walk", "Unsupported not present PDPTE")
     elif self.PDPTE & (1 << 7): # Page present
-      self.physical = (self.PDPTE & 0x000fffffc0000000) | (self.linear & 0x000000003fffffff)
-      self.info("Page Walk", "1GB page physical address : %016x" % (self.physical))
+      self.params['physical'] = (self.PDPTE & 0x000fffffc0000000) | (self.linear & 0x000000003fffffff)
+      self.info("Page Walk", "1GB page physical address : %016x" % (self.params['physical']))
     else:
       self.PDEAddress = (self.PDPTE & 0x000ffffffffff000) | ((self.linear >> 18) & (0x1ff << 3))
       self.info("Page Walk", "PDEAddr : %016x" % (self.PDEAddress))
@@ -192,8 +198,8 @@ class LinearToPhysical(CommandMultiple):
     if not (self.PDE & (1 << 0)):
       self.info("Page Walk", "Unsupported not present PDE")
     elif self.PDE & (1 << 7): # Page present
-      self.physical = (self.PDE & 0x000fffffffe00000) | (self.linear & 0x00000000001fffff)
-      self.info("Page Walk", "2MB page physical address : %016x" % (self.physical))
+      self.params['physical'] = (self.PDE & 0x000fffffffe00000) | (self.linear & 0x00000000001fffff)
+      self.info("Page Walk", "2MB page physical address : %016x" % (self.params['physical']))
     else:
       self.PTEAddress = (self.PDE & 0x000ffffffffff000) | ((self.linear >> 9) & (0x1ff << 3))
       self.info("Page Walk", "PTEAddr : %016x" % (self.PTEAddress))
@@ -206,8 +212,8 @@ class LinearToPhysical(CommandMultiple):
     if not (self.PTE & (1 << 0)):
       self.info("Page Walk", "Unsupported not present PTE")
     else:
-      self.physical = (self.PTE & 0x000ffffffffff000) + (self.linear & 0x0000000000000fff)
-      self.info("Page Walk", "4KB page physical address : %016x" % (self.physical))
+      self.params['physical'] = (self.PTE & 0x000ffffffffff000) + (self.linear & 0x0000000000000fff)
+      self.info("Page Walk", "4KB page physical address : %016x" % (self.params['physical']))
 
 class MTF(Command):
   def __init__(self, params):

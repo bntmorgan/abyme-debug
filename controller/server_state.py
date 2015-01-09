@@ -81,6 +81,7 @@ class ServerStateMinibufShell(ServerStateMinibuf):
     self.shell.submit()
   def cancel(self):
     self.shell.cancel()
+    self.changeState(ServerStateWaiting(self.debugClient))
   def validate(self, t):
     return self.shell.validate(t)
   def usage(self):
@@ -93,8 +94,8 @@ class Shell(object):
     self.debugClient = debugClient
   def validate(self, t):
     raise NotImplementedError("Subclasses should implement this!")
-  # def cancel(self):
-    # raise NotImplementedError("Subclasses should implement this!")
+  def cancel(self):
+    raise NotImplementedError("Subclasses should implement this!")
   def submit(self):
     raise NotImplementedError("Subclasses should implement this!")
   def usage(self):
@@ -389,15 +390,6 @@ class ShellVMCS(Shell):
 class ServerStateWaiting(ServerState):
   def __init__(self, debugClient):
     ServerState.__init__(self, debugClient)
-  def disassemble(self):
-    # Disassemble the last message on the gui
-    if len(self.debugClient.messages) == 0:
-      return
-    m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
-    if isinstance(m, MessageMemoryData):
-      b = Bin(m.data, 0)
-      self.debugClient.gui.display(b.disasm())
-      b = None
   def notifyUserInput(self, input):
     if input in ('q', 'Q'):
       raise urwid.ExitMainLoop()
@@ -473,25 +465,39 @@ class ServerStateWaiting(ServerState):
         u"Address data : ",
         ShellWrite(self.debugClient)))
     elif input == 'd':
-      self.disassemble()
+      if self.debugClient.disass:
+        self.debugClient.endDisass()
+      else:
+        self.debugClient.setDisass()
+      if len(self.debugClient.messages) == 0:
+        return
+      self.debugClient.gui.listBoxModified()
     elif input == 'D':
+      # Set disassemble mode
+      self.debugClient.setDisass()
       # Launch the command
       s = ServerStateCommand(self.debugClient, [
         # Reads the core
         CommandCoreRegsRead,
+        # Get IA32_EFER
+        CommandVMCSRead,
+        # Walks the address
+        CommandWalkFromRIP,
+        LinearToPhysical,
         # Write RIP for memory read
-        CommandReadFromRIP,
+        CommandReadFromPhysical,
         # Memory read
         CommandMemoryRead,
-      ], {})
+        ], {
+          'filename': None,
+          'fields': {'GUEST_IA32_EFER': self.debugClient.vmcs.fields['GUEST_IA32_EFER']}
+        })
       self.changeState(s)
       s.start()
-      self.disassemble()
     elif input == 'p':
       if len(self.debugClient.messages) == 0:
         return
-      m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
-      self.debugClient.gui.display(m.formatFull())
+      self.debugClient.gui.listBoxModified()
     elif input == ':':
       self.changeState(ServerStateShell(self.debugClient))
     elif input == 'R':

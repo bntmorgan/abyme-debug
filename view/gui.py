@@ -4,7 +4,8 @@ import socket, sys
 
 import urwid
 
-from model.message import Message
+from model.message import *
+from model.bin import Bin
 
 import log
 
@@ -65,6 +66,7 @@ class Gui():
     self.execMode = None
     self.mTF = None
     self.vPT = None
+    self.disass = None
     self.palette = [
         ('header', 'white', 'black'),
         ('flags', 'dark cyan', 'black'),
@@ -85,12 +87,15 @@ class Gui():
     self.setStep()
     self.mTF = urwid.Text("")
     self.vPT = urwid.Text("")
+    self.disass = urwid.Text("")
     self.endMTF()
     self.setVPT()
+    self.endDisass()
     widgetsColumns = [
         (9, urwid.AttrMap(self.execMode, 'flags')), 
         (10, urwid.AttrMap(self.mTF, 'flags')),
-        (11, urwid.AttrMap(self.vPT, 'flags'))]
+        (11, urwid.AttrMap(self.vPT, 'flags')),
+        (12, urwid.AttrMap(self.disass, 'flags'))]
     self.bottomBar = urwid.Columns(widgetsColumns)
     widgetsPile = [
         urwid.Frame(self.listBox, head, bottom),
@@ -115,7 +120,13 @@ class Gui():
     # Add the message to the list
     self.listContent.append(urwid.AttrMap(t, None, 'reveal focus'))
   def listBoxModified(self):
-    self.display(self.debugClient.messages[self.listBox.focus_position].formatFull())
+    m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
+    if isinstance(m, MessageMemoryData) and self.debugClient.disass:
+      b = Bin(m.data, m.address)
+      self.debugClient.gui.display(b.disasm())
+      b = None
+    else:
+      self.display(m.formatFull())
     self.setMinibuf("%d" % (self.listBox.focus_position))
   def messageFocus(self, number):
     # Refresh focus
@@ -153,4 +164,8 @@ class Gui():
     self.vPT.set_text("VPT : ON ")
   def endVPT(self):
     self.vPT.set_text("VPT : OFF")
+  def setDisass(self):
+    self.disass.set_text("DISASS : ON ")
+  def endDisass(self):
+    self.disass.set_text("DISASS : OFF")
 

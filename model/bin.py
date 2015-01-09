@@ -1,4 +1,5 @@
 import os, subprocess, tempfile
+import string
 
 class Bin(object):
   def __init__(self, bin, address):
@@ -33,9 +34,9 @@ class Bin(object):
       '-mi386',
       '--adjust-vma', '0x%x' % (self.address),
       '-Mx86-64',
-      #'-Maddr16,data16',
       '-D', self.file.name,
     ])
+    self.code = filter(lambda x: (x in string.printable) and x != chr(9), self.code)
   def disasm(self):
     self.callObjdump()
     return self.code

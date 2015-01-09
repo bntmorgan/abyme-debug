@@ -28,6 +28,7 @@ class DebugClient():
     self.step = 0
     self.mTF = 0
     self.vPT = 1 # Enabled in the hypervisor
+    self.disass = 0 # Enabled in the hypervisor
   def createComponents(self):
     # Create all the components
     self.messages = []
@@ -84,6 +85,12 @@ class DebugClient():
   def endVPT(self):
     self.vPT = 0
     self.gui.endVPT()
+  def setDisass(self):
+    self.disass = 1
+    self.gui.setDisass()
+  def endDisass(self):
+    self.disass = 0
+    self.gui.endDisass()
   def addMessage(self, message):
     self.messages.append(message)
     message.number = len(self.messages) - 1
