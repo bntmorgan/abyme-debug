@@ -3,7 +3,7 @@ from struct import *
 import socket, sys, math
 from model.core import Core
 from model.vmcs import Encoding
-from model.vmm import basic_exit_reasons
+from model.vmm import VMM, ExitReason
 
 '''
 Message
@@ -42,7 +42,8 @@ class Message(ListItem):
       VMMPanic,
       VMCSWrite,
       UserDefined,
-  ) = range(16)
+      SendDebug,
+  ) = range(17)
   def __init__(self):
     self.messageType = Message.Message
     # GUI
@@ -119,6 +120,8 @@ class MessageNetwork(Message):
       m = MessageVMCSWrite()
     elif m.messageType == Message.UserDefined:
       m = MessageUserDefined()
+    elif m.messageType == Message.SendDebug:
+      m = MessageSendDebug()
     #real unpack if changed
     m.unPack(frame, raw)
     return m
@@ -138,14 +141,14 @@ class MessageVMExit(MessageIn):
     self.messageType = Message.VMExit
     self.exitReason = 0xff
   def format(self):
-    return "%s VMExit (%s)" % (MessageIn.format(self), basic_exit_reasons[self.exitReason & 0xffff])
+    return "%s VMExit (%s)" % (MessageIn.format(self), ExitReason.e[self.exitReason & 0xffff]['name'])
   def unPack(self, frame, raw):
     # unpack exit reason
     MessageIn.unPack(self, frame, raw)
     t = unpack('I', self.raw[2:6])
     self.exitReason = t[0]
   def formatFull(self):
-    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d) : %s" % (self.exitReason, self.exitReason & 0xffff, basic_exit_reasons[self.exitReason & 0xffff])
+    return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d) : %s" % (self.exitReason, self.exitReason & 0xffff, ExitReason.e[self.exitReason & 0xffff]['name'])
 
 class MessageCoreRegsData(MessageIn):
   def __init__(self):
@@ -291,8 +294,8 @@ class MessageVMMPanic(MessageIn):
 class MessageUserDefined(MessageIn):
   # Message Types
   (
-      LogCR3,
-      LogMD5,
+    LogCR3,
+    LogMD5,
   ) = range(2)
   def __init__(self):
     MessageIn.__init__(self)
@@ -392,6 +395,25 @@ class MessageVMCSRead(MessageOut):
     return s
   def format(self):
     return "%s VMCSRead" % (MessageOut.format(self))
+  def formatFull(self):
+    return MessageOut.formatFull(self)
+
+class MessageSendDebug(MessageOut):
+  def __init__(self, sendDebug = {}):
+    MessageOut.__init__(self)
+    self.messageType = Message.SendDebug
+    self.sendDebug = sendDebug
+    self.r = [0] * ExitReason.number
+  def pack(self):
+    s = MessageOut.pack(self)
+    for k, r in self.sendDebug.iteritems():
+      self.r[r.encoding] = r.active
+    for i in range(0, ExitReason.number):
+      t = pack('B', self.r[i])
+      s = s + t
+    return s
+  def format(self):
+    return "%s SendDebug" % (MessageOut.format(self))
   def formatFull(self):
     return MessageOut.formatFull(self)
 

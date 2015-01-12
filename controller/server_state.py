@@ -38,7 +38,7 @@ class ServerStateMinibuf(ServerState):
     self.input = urwid.Edit(self.label, u"")
     self.bottomBar.contents.append((self.input, self.bottomBar.options()))
     # urwid.connect_signal(self.input, "change", self.changed)
-    self.bottomBar.focus_position = 3
+    self.bottomBar.focus_position = 4
     self.debugClient.gui.focusMinibuf()
   def removeInput(self):
     self.bottomBar.contents.pop()
@@ -330,6 +330,7 @@ class ServerStateShell(ServerStateMinibuf):
             "read",
             "vmcs read",
             "walk",
+            "vmexit",
             "<line>",
         ]
         self.usage()
@@ -337,7 +338,7 @@ class ServerStateShell(ServerStateMinibuf):
     if self.shell is not None:
       self.shell.usage()
     else:
-      self.debugClient.gui.display("write\nread\nvmcs read\nwalk\n<line>")
+      self.debugClient.gui.display("write\nread\nvmcs read\nwalk\nvmexit\n<line>")
   def getShell(self, t):
     self.shell = None
     self.args = t
@@ -350,6 +351,9 @@ class ServerStateShell(ServerStateMinibuf):
       self.args = test.m.group(1)
     elif test.test("^[ ]*vmcs read (.*)$", t):
       self.shell = ShellVMCS(self.debugClient)
+      self.args = test.m.group(1)
+    elif test.test("^[ ]*vmexit (.*)$", t):
+      self.shell = ShellSendDebug(self.debugClient)
       self.args = test.m.group(1)
     elif test.test("^[ ]*walk (.*)$", t):
       self.shell = ShellLinearToPhysical(self.debugClient)
@@ -384,6 +388,56 @@ class ShellVMCS(Shell):
     return c
   def usage(self):
     self.debugClient.gui.display("Usage()\n type a VMCS Field name and carriage return")
+  def cancel(self):
+    pass
+
+class ShellSendDebug(Shell):
+  def __init__(self, debugClient):
+    Shell.__init__(self, debugClient)
+    self.r = None
+  def validate(self, t):
+    if (t.strip() == '*'):
+      self.r = '*'
+      return 1
+    if (t.strip() == 'default'):
+      self.r = 'default'
+      return 1
+    try:
+      tmp = self.debugClient.vmm.sendDebug[t.strip()]
+      self.r = t.strip()
+    except:
+      return 0
+    return 1
+  def submit(self):
+    # Handle submitted values
+    if self.r == '*':
+      self.debugClient.vmm.setAll()
+    elif self.r == 'default':
+      self.debugClient.vmm.setDefault()
+    else:
+      self.debugClient.vmm.sendDebug[self.r].toggle()
+    # Network command
+    s = ServerStateCommand(self.debugClient, [CommandSendDebug],
+      {'send_debug': self.debugClient.vmm.sendDebug})
+    self.changeState(s)
+    s.start()
+  def complete(self, t):
+    s = ''
+    c = [k for k, v in self.debugClient.vmm.sendDebug.iteritems() if k.startswith(t)]
+    if ('default'.startswith(t)):
+      c.insert(0, 'default')
+    if ('*'.startswith(t)):
+      c.insert(0, '*')
+    for k in c:
+      try:
+        k = k + ' (%d)' % (self.debugClient.vmm.sendDebug[k].active)
+      except:
+        pass
+      s = s + k + '\n'
+    self.debugClient.gui.display(s)
+    return c
+  def usage(self):
+    self.debugClient.gui.display("Usage()\n type a VMExit reason name and carriage return")
   def cancel(self):
     pass
 

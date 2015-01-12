@@ -11,6 +11,7 @@ from model.message import *
 from controller.server_state import BadReply, ServerStateRunning
 from config.config import Config
 from model.vmcs import VMCS, VMCSField, VMCSField16
+from model.vmm import VMM
 import log
 
 class DebugClient():
@@ -24,6 +25,7 @@ class DebugClient():
     self.vmcs = None
     self.core = None
     self.serverState = None
+    self.vmm = None
     # flags
     self.step = 0
     self.mTF = 0
@@ -47,6 +49,7 @@ class DebugClient():
     self.network.createSocket()
     # Create the models
     self.vmcs = VMCS.createVMCS()
+    self.vmm = VMM.createVMM()
   def run(self):
     self.createComponents()
     self.gui.run()

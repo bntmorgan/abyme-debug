@@ -119,6 +119,15 @@ class CommandVMCSWrite(CommandMultiple):
   def receive(self):
     self.params['ok'] = self.message.ok
 
+class CommandSendDebug(CommandMultiple):
+  def __init__(self, params):
+    CommandMultiple.__init__(self, params, self.vMExitWrite)
+  def vMExitWrite(self):
+    self.sendAndReceive(MessageSendDebug(self.params['send_debug']), MessageCommit)
+    self.next(self.receive)
+  def receive(self):
+    self.params['ok'] = self.message.ok
+
 class LinearToPhysical(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.checkPagingMode)
