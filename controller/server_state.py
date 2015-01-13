@@ -402,6 +402,9 @@ class ShellSendDebug(Shell):
     if (t.strip() == 'default'):
       self.r = 'default'
       return 1
+    if (t.strip() == 'none'):
+      self.r = 'none'
+      return 1
     try:
       tmp = self.debugClient.vmm.sendDebug[t.strip()]
       self.r = t.strip()
@@ -414,6 +417,8 @@ class ShellSendDebug(Shell):
       self.debugClient.vmm.setAll()
     elif self.r == 'default':
       self.debugClient.vmm.setDefault()
+    elif self.r == 'none':
+      self.debugClient.vmm.setNone()
     else:
       self.debugClient.vmm.sendDebug[self.r].toggle()
     # Network command
@@ -428,6 +433,8 @@ class ShellSendDebug(Shell):
       c.insert(0, 'default')
     if ('*'.startswith(t)):
       c.insert(0, '*')
+    if ('none'.startswith(t)):
+      c.insert(0, 'none')
     for k in c:
       try:
         k = k + ' (%d)' % (self.debugClient.vmm.sendDebug[k].active)

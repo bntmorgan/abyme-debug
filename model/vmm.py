@@ -75,6 +75,9 @@ class VMM(object):
   def setAll(self):
     for k, v in self.sendDebug.iteritems():
       v.active = 1
+  def setNone(self):
+    for k, v in self.sendDebug.iteritems():
+      v.active = 0
   def setDefault(self):
     self.setAll()
     self.sendDebug['CPUID'].active = 0
