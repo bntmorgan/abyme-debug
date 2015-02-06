@@ -169,14 +169,16 @@ class MessageInfo(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.Info
     self.length = 0
+    self.level = 0
     self.data = None
   def format(self):
     return "%s MessageInfo" % (MessageIn.format(self))
   def unPack(self, frame, raw):
     MessageIn.unPack(self, frame, raw)
-    t = unpack('Q', self.raw[2:10])
+    t = unpack('QI', self.raw[2:14])
     self.length = t[0]
-    self.data = self.raw[10:10 + self.length]
+    self.level = t[1]
+    self.data = self.raw[14:14 + self.length]
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length,
       self.data)

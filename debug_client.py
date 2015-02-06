@@ -57,7 +57,7 @@ class DebugClient():
     log.log("Receiving %s" % (message.__class__.__name__))
     # XXX appending MessageInfo to a log file
     if message.messageType == Message.Info:
-      log.info(message.getString())
+      log.info(message.level, message.getString())
     self.addMessage(message)
     self.serverState.notifyMessage(message)
   def sendMessage(self, message):
@@ -117,4 +117,4 @@ except BadReply, msg:
 finally:
   log.log('------ GOODBYE ------')
   log.logClose()
-  log.infoClose()
+#   log.infoClose()
