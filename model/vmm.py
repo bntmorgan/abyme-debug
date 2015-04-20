@@ -78,6 +78,8 @@ class VMM(object):
   def setNone(self):
     for k, v in self.sendDebug.iteritems():
       v.active = 0
+    # We preserve VMX preemption timer
+    self.sendDebug['VMX_PREEMPTION_TIMER_EXPIRED'].active = 1
   def setDefault(self):
     self.setAll()
     self.sendDebug['CPUID'].active = 0
