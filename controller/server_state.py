@@ -498,14 +498,18 @@ class ServerStateWaiting(ServerState):
       self.changeState(s)
       s.start()
     elif input == 't':
+      # Set / unset  senddebug for MTF and gui handling
       if self.debugClient.mTF:
         self.debugClient.endMTF()
+        self.debugClient.vmm.sendDebug['MONITOR_TRAP_FLAG'].active = 0
       else:
         self.debugClient.setMTF()
+        self.debugClient.vmm.sendDebug['MONITOR_TRAP_FLAG'].active = 1
       # Launch the command
       params = {
         'mTF': self.debugClient.mTF,
-        'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']}
+        'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']},
+        'send_debug': self.debugClient.vmm.sendDebug
       }
       s = ServerStateCommand(self.debugClient, [
         # Read Proc based exec control VMCS field
@@ -513,7 +517,9 @@ class ServerStateWaiting(ServerState):
         # Add or remove MTF flag
         MTF,
         # Write Proc based exec control VMCS field
-        CommandVMCSWrite
+        CommandVMCSWrite,
+        # Update the vmexit server bitmap
+        CommandSendDebug
       ], params)
       self.changeState(s)
       s.start()
