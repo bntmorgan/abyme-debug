@@ -6,6 +6,7 @@ from model.bin import *
 from controller.command import *
 import log
 import stat
+import pickle
 from network import Network
 
 class ServerState(object):
@@ -28,12 +29,28 @@ class BadReply(BaseException):
     return "Unexpected reply message type : %d " % (self.value)
 
 class ServerStateMinibuf(ServerState):
+  @staticmethod
+  def saveHistories():
+    for cclass in ServerStateMinibuf.__subclasses__():
+      log.log(cclass.__name__)
+      log.log(cclass.history)
+      try:
+        pickle.dump(cclass.history, open(".history_%s" % (cclass.__name__), 'w'))
+      except:
+        cclass.history = []
+  @staticmethod
+  def restoreHistories():
+    for cclass in ServerStateMinibuf.__subclasses__():
+      log.log(cclass.__name__)
+      cclass.history = pickle.load(open(".history_%s" % (cclass.__name__), 'r'))
+      log.log(cclass.history)
   def __init__(self, debugClient, label):
     ServerState.__init__(self, debugClient)
     self.bottomBar = self.debugClient.gui.bottomBar
     self.label = label
     self.input = None
     self.addInput()
+    self.historyPointer = 0
   def addInput(self):
     self.input = urwid.Edit(self.label, u"")
     self.bottomBar.contents.append((self.input, self.bottomBar.options()))
@@ -47,15 +64,40 @@ class ServerStateMinibuf(ServerState):
     raise NotImplementedError("Subclasses should implement this!")
   def cancel(self):
     raise NotImplementedError("Subclasses should implement this!")
+  def getHistory(self):
+    return self.__class__.history
+  def getHistoryCMD(self):
+    if len(self.getHistory()) > 0:
+      self.input.set_edit_text(self.getHistory()[self.historyPointer])
+      self.input.move_cursor_to_coords((len(self.input.get_edit_text()),), len(self.input.get_edit_text()), 1)
+  def historyPush(self, cmd):
+    self.getHistory().append(cmd)
+  def historyBWD(self):
+    if self.historyPointer == 0:
+      self.historyPointer = len(self.getHistory()) - 1
+    else:
+      self.historyPointer = self.historyPointer - 1
+    self.getHistoryCMD()
+  def historyFWD(self):
+    if self.historyPointer == len(self.getHistory()) - 1:
+      self.historyPointer = 0
+    else:
+      self.historyPointer = self.historyPointer + 1
+    self.getHistoryCMD()
   def notifyUserInput(self, input):
     if input == 'enter' and self.validate(self.input.get_edit_text()):
       self.removeInput()
+      self.historyPush(self.input.get_edit_text())
       self.submit()
     elif input == 'esc':
       self.removeInput()
       self.cancel()
     elif input == 'tab':
       self.complete(self.input.get_edit_text())
+    elif input == 'ctrl up':
+      self.historyBWD()
+    elif input == 'ctrl down':
+      self.historyFWD()
     else:
       self.usage()
   def changed(self, widget, text):
@@ -74,6 +116,7 @@ class ServerStateMinibuf(ServerState):
     raise NotImplementedError("Subclasses should implement this!")
 
 class ServerStateMinibufShell(ServerStateMinibuf):
+  history = []
   def __init__(self, debugClient, label, shell):
     ServerStateMinibuf.__init__(self, debugClient, label)
     self.shell = shell
@@ -277,6 +320,7 @@ class TestRegex(object):
     return self.m
 
 class ServerStateShell(ServerStateMinibuf):
+  history = []
   def __init__(self, debugClient):
     ServerStateMinibuf.__init__(self, debugClient, u" : ")
     self.shell = None

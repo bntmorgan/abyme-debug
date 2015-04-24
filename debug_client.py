@@ -8,7 +8,7 @@ import socket, sys
 from network import *
 from view.gui import Gui
 from model.message import *
-from controller.server_state import BadReply, ServerStateRunning
+from controller.server_state import BadReply, ServerStateRunning, ServerStateMinibuf
 from config.config import Config
 from model.vmcs import VMCS, VMCSField, VMCSField16
 from model.vmm import VMM
@@ -109,12 +109,14 @@ class DebugClient():
 # Debug client main
 try: 
   log.log('------ STARTUP ------')
+  ServerStateMinibuf.restoreHistories()
   debugClient = DebugClient(Config('config/debug_client.config'))
   debugClient.run()
 except BadReply, msg:
   print("%s\n" % (msg))
   log.log(msg, "ERROR")
 finally:
+  ServerStateMinibuf.saveHistories()
   log.log('------ GOODBYE ------')
   log.logClose()
 #   log.infoClose()
