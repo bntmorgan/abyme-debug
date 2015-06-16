@@ -81,17 +81,17 @@ class VMM(object):
     # We preserve VMX preemption timer
     self.sendDebug['VMX_PREEMPTION_TIMER_EXPIRED'].active = 1
   def setDefault(self):
-    self.setAll()
-    self.sendDebug['CPUID'].active = 0
-    self.sendDebug['IO_INSTRUCTION'].active = 0
-    self.sendDebug['WRMSR'].active = 0
-    self.sendDebug['RDMSR'].active = 0
-    self.sendDebug['XSETBV'].active = 0
-    self.sendDebug['CR_ACCESS'].active = 0
-    self.sendDebug['INVVPID'].active = 0
-    self.sendDebug['VMRESUME'].active = 0
-    self.sendDebug['VMREAD'].active = 0
-    self.sendDebug['VMWRITE'].active = 0
+    self.setNone()
+#     self.sendDebug['CPUID'].active = 0
+#     self.sendDebug['IO_INSTRUCTION'].active = 0
+#     self.sendDebug['WRMSR'].active = 0
+#     self.sendDebug['RDMSR'].active = 0
+#     self.sendDebug['XSETBV'].active = 0
+#     self.sendDebug['CR_ACCESS'].active = 0
+#     self.sendDebug['INVVPID'].active = 0
+#     self.sendDebug['VMRESUME'].active = 0
+#     self.sendDebug['VMREAD'].active = 0
+#     self.sendDebug['VMWRITE'].active = 0
   @staticmethod
   def createVMM():
     vmm = VMM()

@@ -58,8 +58,9 @@ class DebugClient():
     # XXX appending MessageInfo to a log file
     if message.messageType == Message.Info:
       log.info(message.level, message.getString())
-    self.addMessage(message)
-    self.serverState.notifyMessage(message)
+    else:
+      self.addMessage(message)
+      self.serverState.notifyMessage(message)
   def sendMessage(self, message):
     log.log("Sending %s" % (message.__class__.__name__))
     self.network.send(message)

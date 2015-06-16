@@ -37,12 +37,15 @@ class ServerStateMinibuf(ServerState):
       try:
         pickle.dump(cclass.history, open(".history_%s" % (cclass.__name__), 'w'))
       except:
-        cclass.history = []
+        pass
   @staticmethod
   def restoreHistories():
     for cclass in ServerStateMinibuf.__subclasses__():
       log.log(cclass.__name__)
-      cclass.history = pickle.load(open(".history_%s" % (cclass.__name__), 'r'))
+      try:
+        cclass.history = pickle.load(open(".history_%s" % (cclass.__name__), 'r'))
+      except:
+        cclass.history = []
       log.log(cclass.history)
   def __init__(self, debugClient, label):
     ServerState.__init__(self, debugClient)
@@ -271,6 +274,7 @@ class ServerStateRunning(ServerState):
     elif message.messageType == Message.VMMPanic:
       self.debugClient.setStep()
       self.changeState(ServerStateWaiting(self.debugClient))
+    # Demo EARS
     elif message.messageType == Message.UserDefined:
       if message.userType == MessageUserDefined.LogCR3:
         # Send to gui
