@@ -111,7 +111,10 @@ class DebugClient():
 try: 
   log.log('------ STARTUP ------')
   ServerStateMinibuf.restoreHistories()
-  debugClient = DebugClient(Config('config/debug_client.config'))
+  if (len(sys.argv) < 2):
+    debugClient = DebugClient(Config('config/debug_client.config'))
+  else:
+    debugClient = DebugClient(Config(sys.argv[1]))
   debugClient.run()
 except BadReply, msg:
   print("%s\n" % (msg))
