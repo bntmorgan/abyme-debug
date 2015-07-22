@@ -1,8 +1,10 @@
 import os, subprocess, tempfile
 import string
 
+from model.core import *
+
 class Bin(object):
-  def __init__(self, bin, address):
+  def __init__(self, bin, address, mode):
     # code binary
     self.bin = bin
     # rip addres
@@ -12,6 +14,8 @@ class Bin(object):
     self.name = None
     # disasm code
     self.code = None
+    # core mode
+    self.mode = mode
   def __delete__(self):
     os.unlink(self.name)
   def mkTemp(self):
@@ -28,14 +32,20 @@ class Bin(object):
       return
     if self.file is None:
       self.mkTemp()
-    self.code = subprocess.check_output([
+    p = [
       'objdump',
       '-b', 'binary',
       '-mi386',
       '--adjust-vma', '0x%x' % (self.address),
-      '-Mx86-64',
       '-D', self.file.name,
-    ])
+    ]
+    if self.mode == CoreMode.V8086 or self.mode == CoreMode.REAL:
+      p.append('-Maddr16,data16')
+    elif self.mode == CoreMode.PROTECTED:
+      p.append('-Mi386')
+    elif self.mode == CoreMode.IA32E:
+      p.append('-Mx86-64')
+    self.code = subprocess.check_output(p)
     self.code = filter(lambda x: (x in string.printable) and x != chr(9), self.code)
   def disasm(self):
     self.callObjdump()

@@ -140,6 +140,7 @@ class MessageVMExit(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.VMExit
     self.exitReason = 0xff
+    self.core = Core()
   def format(self):
     return "%s VMExit (%s)" % (MessageIn.format(self), ExitReason.e[self.exitReason & 0xffff]['name'])
   def unPack(self, frame, raw):
@@ -147,6 +148,7 @@ class MessageVMExit(MessageIn):
     MessageIn.unPack(self, frame, raw)
     t = unpack('I', self.raw[2:6])
     self.exitReason = t[0]
+    self.core.unPack(self.raw[6:])
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nexit reason : 0x%x (%d) : %s" % (self.exitReason, self.exitReason & 0xffff, ExitReason.e[self.exitReason & 0xffff]['name'])
 

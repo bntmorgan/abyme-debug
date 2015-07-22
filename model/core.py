@@ -36,6 +36,10 @@ class CoreRegs(object):
     self.cr2 = None
     self.cr3 = None
     self.cr4 = None
+    # flags
+    self.rflags = None
+    # msrs
+    self.ia32_efer = None
   def unPack(self, data):
     t = unpack('QQQQQQQQQQQQ', data[0:96]) # 12 * 8
     self.rax = t[0]
@@ -71,6 +75,10 @@ class CoreRegs(object):
     self.cr2 = t[2]
     self.cr3 = t[3]
     self.cr4 = t[4]
+    t = unpack('Q', data[188:196]) # 188 + 8
+    self.rflags = t[0]
+    t = unpack('Q', data[196:204]) # 188 + 8
+    self.ia32_efer = t[0]
   def format(self):
     return """
 Instruction Pointer
@@ -93,12 +101,43 @@ Control Registers
       cr0 %016x cr1 %016x
       cr2 %016x cr3 %016x
       cr4 %016x
+Flags
+      rflags %016x
+Msrs
+      ia32_efer %016x
     """ % (
         self.rip, self.rax, self.rbx, self.rcx, self.rdx, self.r8, self.r9,
         self.r10, self.r11, self.r12, self.r13, self.r14, self.r15, self.cs,
         self.ds, self.ss, self.es, self.fs, self.gs, self.rbp, self.rsp,
         self.rsi, self.rdi, self.cr0, self.cr1, self.cr2, self.cr3, self.cr4,
+        self.rflags, self.ia32_efer
       )
+
+class CoreMode(object):
+  (
+    REAL,
+    PROTECTED,
+    IA32E,
+    V8086
+  ) = range(4)
+  class CoreModeError(Exception):
+    def __init__(self):
+      pass
+    def __str__(self):
+      return "Core mode error"
+
+class Paging(object):
+  (
+    DISABLED,
+    P32BIT,
+    PAE,
+    IA32E,
+  ) = range(4)
+  class PagingError(Exception):
+    def __init__(self):
+      pass
+    def __str__(self):
+      return "Paging error"
 
 class Core(object):
   def __init__(self):
@@ -107,3 +146,31 @@ class Core(object):
     self.regs.unPack(data)
   def format(self):
     return self.regs.format()
+  def getMode(self):
+    # Virtual 8086
+    if (self.regs.rflags & (1 << 17)):
+      return CoreMode.V8086
+    # Real
+    if not self.regs.cr0 & (1 << 0):
+      return CoreMode.REAL
+    # Protected mode
+    elif self.regs.cr0 & (1 << 0) and not self.regs.ia32_efer & (1 << 10):
+      return CoreMode.PROTECTED
+    # Long Mode
+    elif self.regs.cr0 & (1 << 0) and self.regs.ia32_efer & (1 << 10):
+      return CoreMode.IA32E
+    raise CoreMode.CoreModeError()
+  def getPaging(self):
+    if not (self.regs.cr0 & (1 << 0) and self.regs.cr0 & (1 << 31)):
+      return Paging.DISABLED
+    # 32-Bit Paging
+    elif not self.regs.cr4 & (1 << 5) and not self.regs.ia32_efer & (1 << 10):
+      return Paging.P32BIT
+    # PAE Paging
+    elif self.regs.cr4 & (1 << 5) and not self.regs.ia32_efer & (1 << 10):
+      return Paging.PAE
+    # IA-32e Paging
+    elif self.regs.cr4 & (1 << 5) and self.regs.ia32_efer & (1 << 10):
+      return Paging.IA32E
+    raise Paging.PagingError()
+

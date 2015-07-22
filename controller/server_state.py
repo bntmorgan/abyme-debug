@@ -174,6 +174,9 @@ class ServerStateCommand(ServerStateReply):
     self.command.message = message
     if self.command.expected != None and not isinstance(self.command.message, self.command.expected):
       raise BadReply(self.command.message.messageType)
+    elif message.messageType == Message.CoreRegsData:
+      # Update debug_client core
+      self.debugClient.core = message.core
     # Execute and handle the commands
     self.execute()
   def start(self):
@@ -265,7 +268,10 @@ class ServerStateRunning(ServerState):
       ## self.changeState(ServerStateWaiting(self.debugClient))
       self.debugClient.sendContinue()
     elif message.messageType == Message.VMExit:
+      # Update debug_client core
+      self.debugClient.core = message.core
       # if we are not in step mode we directly continue the execution
+      self.debugClient.vmm.sendDebug[ExitReason.e[message.exitReason]['name']].active = 1
       if self.debugClient.step:
         # Server is now waiting
         self.changeState(ServerStateWaiting(self.debugClient))
@@ -592,8 +598,6 @@ class ServerStateWaiting(ServerState):
       self.debugClient.setDisass()
       # Launch the command
       s = ServerStateCommand(self.debugClient, [
-        # Reads the core
-        CommandCoreRegsRead,
         # Get IA32_EFER
         CommandVMCSRead,
         # Walks the address
@@ -604,8 +608,11 @@ class ServerStateWaiting(ServerState):
         # Memory read
         CommandMemoryRead,
         ], {
+          'core': self.debugClient.core,
           'filename': None,
-          'fields': {'GUEST_IA32_EFER': self.debugClient.vmcs.fields['GUEST_IA32_EFER']}
+          'fields': {
+            'GUEST_CS_BASE': self.debugClient.vmcs.fields['GUEST_CS_BASE']
+          },
         })
       self.changeState(s)
       s.start()

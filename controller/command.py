@@ -1,4 +1,5 @@
 from model.message import *
+from model.core import *
 
 #
 # The command object doesn't need to be interfaced with the
@@ -91,8 +92,14 @@ class CommandCoreRegsRead(CommandMultiple):
 class CommandWalkFromRIP(Command):
   def __init__(self, params):
     Command.__init__(self, params)
+    self.cs_base = None
+    self.cs_base = self.params['fields']['GUEST_CS_BASE'].value
   def execute(self):
     self.params['linear'] = self.params['core'].regs.rip
+    m = self.params['core'].getMode()
+    if m == CoreMode.V8086 or m == CoreMode.REAL:
+      self.params['linear'] = self.params["linear"] + self.cs_base
+      self.info("Page Walk", "Virtual 8086, new linear: %016x" % (self.params['linear']))
 
 class CommandReadFromPhysical(Command):
   def __init__(self, params):
@@ -150,25 +157,27 @@ class LinearToPhysical(CommandMultiple):
     self.PML4E = 0
   # Algorithm steps
   def checkPagingMode(self):
-    self.IA32_EFER = self.params['fields']['GUEST_IA32_EFER'].value
     self.core = self.params['core']
+    self.IA32_EFER = self.core.regs.ia32_efer
+    p = self.core.getPaging()
+    m = self.core.getMode()
     # Pagination activated ?
-    if not (self.core.regs.cr0 & (1 << 0) and self.core.regs.cr0 & (1 << 31)):
+    if p == Paging.DISABLED:
       self.params['physical'] = self.linear
       self.info("Page Walk", "Pagination is not activated : %016x" % (self.physical))
       return
     # 32-Bit Paging
-    elif not self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
+    elif p == Paging.P32BIT:
       self.info("Page Walk", "Unsupported paging mode : 32-Bit Paging : %016x" % (self.physical))
       return
     # PAE Paging
-    elif self.core.regs.cr4 & (1 << 5) and not self.IA32_EFER & (1 << 10):
+    elif p == Paging.PAE:
       self.cr3 = self.core.regs.cr3 & 0x00000000fffffe00
       self.PDPTEAddress = self.cr3 | ((self.linear & 0xc0000000)>> 27)
       self.sendAndReceive(MessageMemoryRead(self.PDPTEAddress, 8), MessageMemoryData)
       self.next(self.getPDPTE)
     # IA-32e Paging
-    elif self.core.regs.cr4 & (1 << 5) and self.IA32_EFER & (1 << 10):
+    elif p == Paging.IA32E:
       # MAXPHYADDR = at most 52
       self.cr3 = self.core.regs.cr3 & 0x000ffffffffff000
       self.PML4EAddress = self.cr3 | ((self.linear >> 36) & (0x1ff << 3))

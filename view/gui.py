@@ -122,7 +122,7 @@ class Gui():
   def listBoxModified(self):
     m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
     if isinstance(m, MessageMemoryData) and self.debugClient.disass:
-      b = Bin(m.data, m.address)
+      b = Bin(m.data, m.address, self.debugClient.core.getMode())
       self.debugClient.gui.display(b.disasm())
       b = None
     else:
