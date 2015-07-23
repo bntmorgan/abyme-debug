@@ -58,7 +58,7 @@ class ServerStateMinibuf(ServerState):
     self.input = urwid.Edit(self.label, u"")
     self.bottomBar.contents.append((self.input, self.bottomBar.options()))
     # urwid.connect_signal(self.input, "change", self.changed)
-    self.bottomBar.focus_position = 4
+    self.bottomBar.focus_position = 6
     self.debugClient.gui.focusMinibuf()
   def removeInput(self):
     self.bottomBar.contents.pop()
@@ -174,9 +174,6 @@ class ServerStateCommand(ServerStateReply):
     self.command.message = message
     if self.command.expected != None and not isinstance(self.command.message, self.command.expected):
       raise BadReply(self.command.message.messageType)
-    elif message.messageType == Message.CoreRegsData:
-      # Update debug_client core
-      self.debugClient.core = message.core
     # Execute and handle the commands
     self.execute()
   def start(self):
@@ -268,8 +265,6 @@ class ServerStateRunning(ServerState):
       ## self.changeState(ServerStateWaiting(self.debugClient))
       self.debugClient.sendContinue()
     elif message.messageType == Message.VMExit:
-      # Update debug_client core
-      self.debugClient.core = message.core
       # if we are not in step mode we directly continue the execution
       self.debugClient.vmm.sendDebug[ExitReason.e[message.exitReason]['name']].active = 1
       if self.debugClient.step:
@@ -512,9 +507,30 @@ class ServerStateWaiting(ServerState):
       self.usage()
     elif input == 's':
       self.debugClient.setStep()
-      self.debugClient.sendContinue()
-      # server is now running
-      self.changeState(ServerStateRunning(self.debugClient))
+      if self.debugClient.disass:
+        s = ServerStateCommand(self.debugClient, [
+          # Wait for a WMExit
+          CommandRunning,
+          # Get IA32_EFER
+          CommandVMCSRead,
+          # Walks the address
+          CommandWalkFromRIP,
+          LinearToPhysical,
+          # Write RIP for memory read
+          CommandReadFromPhysical,
+          # Memory read
+          CommandMemoryRead,
+          ], {
+            'filename': None,
+            'fields': {
+              'GUEST_CS_BASE': self.debugClient.vmcs.fields['GUEST_CS_BASE']
+              },
+            })
+        self.changeState(s)
+        s.start()
+      else: 
+        self.debugClient.sendContinue()
+        self.changeState(ServerStateRunning(self.debugClient))
     elif input == 'up':
       self.debugClient.gui.messageFocusDec()
     elif input == 'down':

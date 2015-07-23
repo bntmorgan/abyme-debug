@@ -23,9 +23,10 @@ class DebugClient():
     self.gui = None
     # Models
     self.vmcs = None
-    self.core = None
+    self.core = Core()
     self.serverState = None
     self.vmm = None
+    self.vmid = None
     # flags
     self.step = 0
     self.mTF = 0
@@ -59,8 +60,15 @@ class DebugClient():
     if message.messageType == Message.Info:
       log.info(message.level, message.getString())
     else:
+      if message.messageType == Message.CoreRegsData or message.messageType == Message.VMExit:
+        # Update debug_client core
+        self.core = message.core
+      if message.messageType == Message.VMExit:
+        self.setVmexit(message.exitReason)
+      # Update current executing vmid
       self.addMessage(message)
       self.serverState.notifyMessage(message)
+      self.setVmid(message.vmid)
   def sendMessage(self, message):
     log.log("Sending %s" % (message.__class__.__name__))
     self.network.send(message)
@@ -106,6 +114,11 @@ class DebugClient():
   def cacheExpired(self):
     self.core = None
     self.vmcs = VMCS.createVMCS()
+  def setVmid(self, vmid):
+    self.vmid = vmid
+    self.gui.setVmid(self.vmid, self.core.regs.rip)
+  def setVmexit(self, reason):
+    self.gui.setVmexit(ExitReason.e[reason & 0xffff]['name'])
 
 # Debug client main
 try: 

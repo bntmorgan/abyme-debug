@@ -19,9 +19,9 @@ class BadVMCSFieldSize(BaseException):
 
 class ListItem(object):
   def format(self):
-    return "%04d %d " % (self.number, self.coreNumber)
+    return "%04d %d " % (self.number, self.vmid)
   def formatFull(self):
-    return "number : %04d\ncore : %d\n" % (self.number, self.coreNumber)
+    return "number : %04d\ncore : %d\n" % (self.number, self.vmid)
 
 class Message(ListItem):
   # Message Types
@@ -48,7 +48,7 @@ class Message(ListItem):
     self.messageType = Message.Message
     # GUI
     self.number = 0
-    self.coreNumber = 0
+    self.vmid = 0
 
 class Info(Message):
   def __init__(self, label, message):
@@ -69,9 +69,9 @@ class MessageNetwork(Message):
     self.raw = raw
     t = unpack('BB', self.raw[0:2])
     self.messageType = t[0]
-    self.coreNumber = t[1]
+    self.vmid = t[1]
   def pack(self):
-    return pack('BB', self.messageType, self.coreNumber)
+    return pack('BB', self.messageType, self.vmid)
   @staticmethod
   def ethAddr (a):
     b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]), ord(a[3]), ord(a[4]), ord(a[5]))

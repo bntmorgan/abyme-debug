@@ -67,6 +67,8 @@ class Gui():
     self.mTF = None
     self.vPT = None
     self.disass = None
+    self.vmid = None
+    self.vmexit = None
     self.palette = [
         ('header', 'white', 'black'),
         ('flags', 'dark cyan', 'black'),
@@ -88,14 +90,19 @@ class Gui():
     self.mTF = urwid.Text("")
     self.vPT = urwid.Text("")
     self.disass = urwid.Text("")
+    self.vmid = urwid.Text("",)
+    self.vmexit = urwid.Text("")
     self.endMTF()
     self.setVPT()
     self.endDisass()
+    self.setVmid(0, 0)
     widgetsColumns = [
-        (9, urwid.AttrMap(self.execMode, 'flags')), 
-        (10, urwid.AttrMap(self.mTF, 'flags')),
-        (11, urwid.AttrMap(self.vPT, 'flags')),
-        (12, urwid.AttrMap(self.disass, 'flags'))]
+        (5, urwid.AttrMap(self.execMode, 'flags')), 
+        (5, urwid.AttrMap(self.mTF, 'flags')),
+        (5, urwid.AttrMap(self.vPT, 'flags')),
+        (5, urwid.AttrMap(self.disass, 'flags')),
+        (22, urwid.AttrMap(self.vmid, 'flags')),
+        (22, urwid.AttrMap(self.vmexit, 'flags'))]
     self.bottomBar = urwid.Columns(widgetsColumns)
     widgetsPile = [
         urwid.Frame(self.listBox, head, bottom),
@@ -153,19 +160,23 @@ class Gui():
   def display(self, text):
     self.text.set_text(text)
   def setStep(self):
-    self.execMode.set_text("MODE : S")
+    self.execMode.set_text("[STP]")
   def endStep(self):
-    self.execMode.set_text("MODE : C")
+    self.execMode.set_text(" STP ")
   def setMTF(self):
-    self.mTF.set_text("MTF : ON ")
+    self.mTF.set_text("[MTF]")
   def endMTF(self):
-    self.mTF.set_text("MTF : OFF")
+    self.mTF.set_text(" MTF ")
   def setVPT(self):
-    self.vPT.set_text("VPT : ON ")
+    self.vPT.set_text("[VPT]")
   def endVPT(self):
-    self.vPT.set_text("VPT : OFF")
+    self.vPT.set_text(" VPT ")
   def setDisass(self):
-    self.disass.set_text("DISASS : ON ")
+    self.disass.set_text("[DIS]")
   def endDisass(self):
-    self.disass.set_text("DISASS : OFF")
+    self.disass.set_text(" DIS ")
+  def setVmid(self, vmid, rip):
+    self.vmid.set_text("{%d@0x%016x}" % (vmid, rip))
+  def setVmexit(self, reason):
+    self.vmexit.set_text("{%s}" % (reason))
 

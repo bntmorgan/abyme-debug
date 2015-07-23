@@ -3,43 +3,43 @@ from struct import *
 class CoreRegs(object):
   def __init__(self):
     # GPRs
-    self.rax = None
-    self.rbx = None
-    self.rcx = None
-    self.rdx = None
-    self.r8 = None
-    self.r9 = None
-    self.r10 = None
-    self.r11 = None
-    self.r12 = None
-    self.r13 = None
-    self.r14 = None
-    self.r15 = None
+    self.rax = 0
+    self.rbx = 0
+    self.rcx = 0
+    self.rdx = 0
+    self.r8 = 0
+    self.r9 = 0
+    self.r10 = 0
+    self.r11 = 0
+    self.r12 = 0
+    self.r13 = 0
+    self.r14 = 0
+    self.r15 = 0
     # Segment
-    self.cs = None
-    self.ds = None
-    self.ss = None
-    self.es = None
-    self.fs = None
-    self.gs = None
+    self.cs = 0
+    self.ds = 0
+    self.ss = 0
+    self.es = 0
+    self.fs = 0
+    self.gs = 0
     # Pointer
-    self.rbp = None
-    self.rsp = None
+    self.rbp = 0
+    self.rsp = 0
     # Index
-    self.rsi = None
-    self.rdi = None
+    self.rsi = 0
+    self.rdi = 0
     # Instruction pointer
-    self.rip = None
+    self.rip = 0
     # Control registers
-    self.cr0 = None
-    self.cr1 = None
-    self.cr2 = None
-    self.cr3 = None
-    self.cr4 = None
+    self.cr0 = 0
+    self.cr1 = 0
+    self.cr2 = 0
+    self.cr3 = 0
+    self.cr4 = 0
     # flags
-    self.rflags = None
+    self.rflags = 0
     # msrs
-    self.ia32_efer = None
+    self.ia32_efer = 0
   def unPack(self, data):
     t = unpack('QQQQQQQQQQQQ', data[0:96]) # 12 * 8
     self.rax = t[0]
