@@ -112,7 +112,7 @@ class CommandVMCSRead(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.vMCSRead)
   def vMCSRead(self):
-    self.sendAndReceive(MessageVMCSRead(self.params['fields']), MessageVMCSData)
+    self.sendAndReceive(MessageVMCSRead(self.params['fields'], self.params['vmid']), MessageVMCSData)
     self.next(self.receive)
   def receive(self):
     self.params['fields'] = self.message.fields
@@ -125,6 +125,7 @@ class CommandRunning(CommandMultiple):
     self.next(self.receive)
   def receive(self):
     self.params['core'] = self.message.core
+    self.params['vmid'] = self.message.vmid
 
 class CommandVMCSWrite(CommandMultiple):
   def __init__(self, params):

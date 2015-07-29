@@ -21,7 +21,7 @@ class ListItem(object):
   def format(self):
     return "%04d %d " % (self.number, self.vmid)
   def formatFull(self):
-    return "number : %04d\ncore : %d\n" % (self.number, self.vmid)
+    return "number : %04d\nvmid : %d\n" % (self.number, self.vmid)
 
 class Message(ListItem):
   # Message Types
@@ -244,10 +244,14 @@ class MessageVMCSData(MessageIn):
     self.vmcs = None
     # Received fields for display purpose
     self.fields = {}
+    self.shadow = 0
   def unPack(self, frame, raw):
     MessageIn.unPack(self, frame, raw)
-    # Copy the VMCS Fields
     data = self.raw[2:]
+    self.shadow = unpack("B", data[0])[0]
+    # Shift shadow from data
+    data = data[1:]
+    # Copy the VMCS Fields
     s = unpack("B", data[0])[0]
     while s > 0:
       e = unpack("Q", data[1:9])[0]
@@ -382,12 +386,15 @@ class MessageCoreRegsRead(MessageOut):
     return "%s CoreRegsRead" % (MessageOut.format(self))
 
 class MessageVMCSRead(MessageOut):
-  def __init__(self, fields = []):
+  def __init__(self, fields = [], vmid = 0, shadow = 0):
     MessageOut.__init__(self)
     self.messageType = Message.VMCSRead
     self.fields = fields
+    self.vmid = vmid
+    self.shadow = shadow
   def pack(self):
     s = MessageOut.pack(self)
+    s = s + pack('B', self.shadow)
     for k, f in self.fields.iteritems():
       t = pack('B', f.length)
       s = s + t

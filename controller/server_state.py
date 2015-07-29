@@ -416,15 +416,31 @@ class ShellVMCS(Shell):
   def __init__(self, debugClient):
     Shell.__init__(self, debugClient)
     self.f = None
+    self.vmid = 0
+    self.shadow = 0
   def validate(self, t):
+    t = t.strip().rsplit(' ')
     try:
-      self.f = self.debugClient.vmcs.fields[t.strip()]
+      self.f = self.debugClient.vmcs.fields[t[0].strip()]
     except:
       return 0
+    if len(t) >= 2:
+      try:
+        self.vmid = int(t[1], 0)
+      except:
+        return 0
+    else:
+      self.vmid = self.debugClient.vmid
+    if len(t) >= 3:
+      if t[2] == 's':
+        self.shadow = 1
+      else:
+        self.shadow = 0
     return 1
   def submit(self):
     s = ServerStateCommand(self.debugClient, [CommandVMCSRead],
-      {'fields': {self.f.name : self.f}})
+        {'fields': {self.f.name : self.f}, 'vmid': self.vmid, 'shadow':
+          self.shadow})
     self.changeState(s)
     s.start()
   def complete(self, t):
@@ -626,6 +642,7 @@ class ServerStateWaiting(ServerState):
         ], {
           'core': self.debugClient.core,
           'filename': None,
+          'vmid': self.debugClient.vmid,
           'fields': {
             'GUEST_CS_BASE': self.debugClient.vmcs.fields['GUEST_CS_BASE']
           },
