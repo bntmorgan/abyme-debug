@@ -1,5 +1,6 @@
 from model.message import *
 from model.core import *
+from model.vmm import *
 
 #
 # The command object doesn't need to be interfaced with the
@@ -45,6 +46,7 @@ class CommandMemoryRead(CommandMultiple):
     CommandMultiple.__init__(self, params, self.read)
     self.cAddress = self.params['address']
     self.tLen = self.params['length']
+    self.params['data'] = ''
     self.cLen = 0x0 
     if self.params['filename'] != None:
       try:
@@ -68,6 +70,7 @@ class CommandMemoryRead(CommandMultiple):
     if (self.cLen == self.tLen):
       if self.file != None:
         self.file.close()
+      self.params['data'] = self.params['data'] + self.message.data
     else:
       self.next(self.read)
 
@@ -75,7 +78,7 @@ class CommandMemoryWrite(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.write)
   def write(self):
-    self.sendAndReceive(MessageMemoryWrite(self.params['address'], self.params['memory']), MessageCommit)
+    self.sendAndReceive(MessageMemoryWrite(self.params['address'], self.params['data']), MessageCommit)
     self.next(self.receive)
   def receive(self):
     self.params['ok'] = self.message.ok
@@ -92,7 +95,6 @@ class CommandCoreRegsRead(CommandMultiple):
 class CommandWalkFromRIP(Command):
   def __init__(self, params):
     Command.__init__(self, params)
-    self.cs_base = None
     self.cs_base = self.params['fields']['GUEST_CS_BASE'].value
   def execute(self):
     self.params['linear'] = self.params['core'].regs.rip
@@ -100,6 +102,12 @@ class CommandWalkFromRIP(Command):
     if m == CoreMode.V8086 or m == CoreMode.REAL:
       self.params['linear'] = self.params["linear"] + self.cs_base
       self.info("Page Walk", "Virtual 8086, new linear: %016x" % (self.params['linear']))
+
+class CommandWalkFromRSP(Command):
+  def __init__(self, params):
+    Command.__init__(self, params)
+  def execute(self):
+    self.params['linear'] = self.params['core'].regs.rsp
 
 class CommandReadFromPhysical(Command):
   def __init__(self, params):
@@ -131,7 +139,7 @@ class CommandVMCSWrite(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.vMCSWrite)
   def vMCSWrite(self):
-    self.sendAndReceive(MessageVMCSWrite(self.params['fields']), MessageCommit)
+    self.sendAndReceive(MessageVMCSWrite(self.params['fields'], self.params['vmid']), MessageCommit)
     self.next(self.receive)
   def receive(self):
     self.params['ok'] = self.message.ok
@@ -140,7 +148,7 @@ class CommandSendDebug(CommandMultiple):
   def __init__(self, params):
     CommandMultiple.__init__(self, params, self.vMExitWrite)
   def vMExitWrite(self):
-    self.sendAndReceive(MessageSendDebug(self.params['send_debug']), MessageCommit)
+    self.sendAndReceive(MessageSendDebug(self.params['send_debug'], self.params['vmid']), MessageCommit)
     self.next(self.receive)
   def receive(self):
     self.params['ok'] = self.message.ok

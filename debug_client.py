@@ -15,6 +15,7 @@ from model.vmm import VMM
 import log
 
 class DebugClient():
+  VM_NB = 8
   def __init__(self, config):
     # Config
     self.config = config
@@ -26,7 +27,7 @@ class DebugClient():
     self.core = Core()
     self.serverState = None
     self.vmm = None
-    self.vmid = None
+    self.vmid = 0
     # flags
     self.step = 0
     self.mTF = 0
@@ -50,7 +51,7 @@ class DebugClient():
     self.network.createSocket()
     # Create the models
     self.vmcs = VMCS.createVMCS()
-    self.vmm = VMM.createVMM()
+    self.vmm = VMM.createVMM(DebugClient.VM_NB)
   def run(self):
     self.createComponents()
     self.gui.run()
@@ -66,9 +67,9 @@ class DebugClient():
       if message.messageType == Message.VMExit:
         self.setVmexit(message.exitReason)
       # Update current executing vmid
+      self.setVmid(message.vmid)
       self.addMessage(message)
       self.serverState.notifyMessage(message)
-      self.setVmid(message.vmid)
   def sendMessage(self, message):
     log.log("Sending %s" % (message.__class__.__name__))
     self.network.send(message)

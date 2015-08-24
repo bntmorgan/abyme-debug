@@ -1,3 +1,5 @@
+from struct import *
+
 class ExitReason(object):
   number = 65
   e = {
@@ -70,33 +72,50 @@ class ExitReason(object):
     self.active = 1 if self.active == 0 else 0
 
 class VMM(object):
-  def __init__(self):
-    self.sendDebug = {}
-  def setAll(self):
-    for k, v in self.sendDebug.iteritems():
+  def __init__(self, VM_NB):
+    self.sendDebug = []
+    self.VM_NB = VM_NB
+  def setAllGlbl(self):
+    for i in range(0, self.VM_NB):
+      self.setAll(i)
+  def setAll(self, vmid):
+    for k, v in self.sendDebug[vmid].iteritems():
       v.active = 1
-  def setNone(self):
-    for k, v in self.sendDebug.iteritems():
+  def setNoneGlbl(self):
+    for i in range(0, self.VM_NB):
+      self.setNone(i)
+  def setNone(self, vmid):
+    for k, v in self.sendDebug[vmid].iteritems():
       v.active = 0
-    # We preserve VMX preemption timer
-    self.sendDebug['VMX_PREEMPTION_TIMER_EXPIRED'].active = 1
-    self.sendDebug['VMCALL'].active = 1
-  def setDefault(self):
-    self.setNone()
-#     self.sendDebug['CPUID'].active = 0
-#     self.sendDebug['IO_INSTRUCTION'].active = 0
-#     self.sendDebug['WRMSR'].active = 0
-#     self.sendDebug['RDMSR'].active = 0
-#     self.sendDebug['XSETBV'].active = 0
-#     self.sendDebug['CR_ACCESS'].active = 0
-#     self.sendDebug['INVVPID'].active = 0
-#     self.sendDebug['VMRESUME'].active = 0
-#     self.sendDebug['VMREAD'].active = 0
-#     self.sendDebug['VMWRITE'].active = 0
+      # We preserve VMX preemption timer
+      self.sendDebug[vmid]['VMX_PREEMPTION_TIMER_EXPIRED'].active = 1
+      self.sendDebug[vmid]['VMCALL'].active = 1
+  def setDefaultGlbl(self):
+    for i in range(0, self.VM_NB):
+      self.setDefault(i)
+  def setDefault(self, vmid):
+    self.setNone(vmid)
+  def toggleGlbl(self, reason):
+    for i in range(0, self.VM_NB):
+      self.toggle(i, reason)
+  def toggle(self, vmid, reason):
+    self.sendDebug[vmid][reason].toggle()
+  def setGlbl(self, reason):
+    for i in range(0, self.VM_NB):
+      self.set(i, reason)
+  def set(self, vmid, reason):
+    self.sendDebug[vmid][reason].active = 1
+  def unsetGlbl(self, reason):
+    for i in range(0, self.VM_NB):
+      self.unset(i, reason)
+  def unset(self, vmid, reason):
+    self.sendDebug[vmid][reason].active = 1
   @staticmethod
-  def createVMM():
-    vmm = VMM()
-    for k, v in ExitReason.e.iteritems():
-      vmm.sendDebug[v['name']] = ExitReason(k, 1)
-    vmm.setDefault()
+  def createVMM(VM_NB):
+    vmm = VMM(VM_NB)
+    for i in range(0, VM_NB):
+      vmm.sendDebug.append({})
+      for k, v in ExitReason.e.iteritems():
+        vmm.sendDebug[i][v['name']] = ExitReason(k, 1)
+    vmm.setDefaultGlbl()
     return vmm

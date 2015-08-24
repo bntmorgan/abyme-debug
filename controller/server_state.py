@@ -8,6 +8,7 @@ import log
 import stat
 import pickle
 from network import Network
+from model.vmm import *
 
 class ServerState(object):
   def __init__(self, debugClient):
@@ -162,10 +163,16 @@ class ServerStateReply(ServerState):
   def usage(self):
     self.debugClient.gui.display("Usage()\n Waiting for response... Press escape to stop")
 
+# call wrapper for commands
+# function reference and a list of parameters
+def wrapper(func, args):
+  func(*args)
+
 class ServerStateCommand(ServerStateReply):
-  def __init__(self, debugClient, commands = [], params = {}):
+  def __init__(self, debugClient, commands = [], params = {}, callback = None):
     ServerStateReply.__init__(self, debugClient)
     self.commands = deque(commands)
+    self.callback = callback
     # Partage du debugClient aux commandes
     params['debugClient'] = debugClient
     self.params = params
@@ -189,8 +196,11 @@ class ServerStateCommand(ServerStateReply):
           self.commands.popleft()
           self.command = self.commands[0](self.params)
         else:
-          # Finally finished
-          self.changeState(ServerStateWaiting(self.debugClient))
+          # Finally finished : call the callback
+          if (self.callback):
+            wrapper(self.callback['f'], self.callback['p'])
+          else: # Or go back to ServerStateWaiting
+            self.changeState(ServerStateWaiting(self.debugClient))
           break
       elif self.isCommandExpected():
         self.send()
@@ -257,7 +267,7 @@ class ServerStateRunning(ServerState):
       self.debugClient.gui.messageFocusInc()
     else:
       self.usage()
-  def notifyMessage(self, message):
+  def notifyMessage(self, message, bp = True):
     # Handle the message according to the type
     if message.messageType == Message.UnhandledVMExit:
       ## self.debugClient.setStep()
@@ -266,10 +276,34 @@ class ServerStateRunning(ServerState):
       self.debugClient.sendContinue()
     elif message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
-      self.debugClient.vmm.sendDebug[ExitReason.e[message.exitReason]['name']].active = 1
-      if self.debugClient.step:
-        # Server is now waiting
-        self.changeState(ServerStateWaiting(self.debugClient))
+      self.debugClient.vmm.set(self.debugClient.vmid, ExitReason.e[message.exitReason]['name'])
+      if ExitReason.e[message.exitReason]['name'] == 'VMCALL':
+        log.log("YES DUDES, THis is a VMCALL")
+      elif self.debugClient.step:
+        if self.debugClient.disass:
+          s = ServerStateCommand(self.debugClient, [
+            # Get IA32_EFER
+            CommandVMCSRead,
+            # Walks the address
+            CommandWalkFromRIP,
+            LinearToPhysical,
+            # Write RIP for memory read
+            CommandReadFromPhysical,
+            # Memory read
+            CommandMemoryRead,
+            ], {
+              'core' : self.debugClient.core,
+              'vmid' : self.debugClient.vmid,
+              'filename': None,
+              'fields': {
+                'GUEST_CS_BASE': self.debugClient.vmcs.fields['GUEST_CS_BASE']
+                },
+              })
+          self.changeState(s)
+          s.start()
+        else: 
+          # Server is now waiting
+          self.changeState(ServerStateWaiting(self.debugClient))
       else:
         self.debugClient.sendContinue()
     elif message.messageType == Message.VMMPanic:
@@ -460,40 +494,65 @@ class ShellSendDebug(Shell):
   def __init__(self, debugClient):
     Shell.__init__(self, debugClient)
     self.r = None
+    self.vmid = self.debugClient.vmid
+    self.glbl = 0
   def validate(self, t):
-    if (t.strip() == '*'):
-      self.r = '*'
-      return 1
-    if (t.strip() == 'default'):
-      self.r = 'default'
-      return 1
-    if (t.strip() == 'none'):
-      self.r = 'none'
-      return 1
-    try:
-      tmp = self.debugClient.vmm.sendDebug[t.strip()]
-      self.r = t.strip()
-    except:
-      return 0
+    t = t.strip().split(' ');
+    if len(t) >= 1:
+      if (t[0].strip() == '*'):
+        self.r = '*'
+      elif (t[0].strip() == 'default'):
+        self.r = 'default'
+      elif (t[0].strip() == 'none'):
+        self.r = 'none'
+      else:
+        try:
+          # test the existance of the key
+          tmp = self.debugClient.vmm.sendDebug[0][t[0].strip()]
+          self.r = t[0].strip()
+        except:
+          return 0
+    if len(t) >= 2:
+      if (t[1].strip() == '*'):
+        self.glbl = 1
+      else:
+        try:
+          self.vmid = int(t[1], 0)
+        except:
+          return 0
     return 1
   def submit(self):
     # Handle submitted values
-    if self.r == '*':
-      self.debugClient.vmm.setAll()
-    elif self.r == 'default':
-      self.debugClient.vmm.setDefault()
-    elif self.r == 'none':
-      self.debugClient.vmm.setNone()
+    log.log(self.glbl)
+    log.log(self.vmid)
+    if self.glbl:
+      if self.r == '*':
+        log.log("allGlbl")
+        self.debugClient.vmm.setAllGlbl()
+      elif self.r == 'default':
+        self.debugClient.vmm.setDefaultGlbl()
+      elif self.r == 'none':
+        self.debugClient.vmm.setNoneGlbl()
+      else:
+        self.debugClient.vmm.toggleGlbl(self.r)
     else:
-      self.debugClient.vmm.sendDebug[self.r].toggle()
+      if self.r == '*':
+        log.log("all")
+        self.debugClient.vmm.setAll(self.vmid)
+      elif self.r == 'default':
+        self.debugClient.vmm.setDefault(self.vmid)
+      elif self.r == 'none':
+        self.debugClient.vmm.setNone(self.vmid)
+      else:
+        self.debugClient.vmm.toggle(self.vmid, self.r)
     # Network command
     s = ServerStateCommand(self.debugClient, [CommandSendDebug],
-      {'send_debug': self.debugClient.vmm.sendDebug})
+        {'send_debug': self.debugClient.vmm.sendDebug, 'vmid': self.vmid})
     self.changeState(s)
     s.start()
   def complete(self, t):
     s = ''
-    c = [k for k, v in self.debugClient.vmm.sendDebug.iteritems() if k.startswith(t)]
+    c = [k for k, v in self.debugClient.vmm.sendDebug[self.vmid].iteritems() if k.startswith(t)]
     if ('default'.startswith(t)):
       c.insert(0, 'default')
     if ('*'.startswith(t)):
@@ -502,7 +561,7 @@ class ShellSendDebug(Shell):
       c.insert(0, 'none')
     for k in c:
       try:
-        k = k + ' (%d)' % (self.debugClient.vmm.sendDebug[k].active)
+        k = k + ' (%d)' % (self.debugClient.vmm.sendDebug[self.vmid][k].active)
       except:
         pass
       s = s + k + '\n'
@@ -523,30 +582,8 @@ class ServerStateWaiting(ServerState):
       self.usage()
     elif input == 's':
       self.debugClient.setStep()
-      if self.debugClient.disass:
-        s = ServerStateCommand(self.debugClient, [
-          # Wait for a WMExit
-          CommandRunning,
-          # Get IA32_EFER
-          CommandVMCSRead,
-          # Walks the address
-          CommandWalkFromRIP,
-          LinearToPhysical,
-          # Write RIP for memory read
-          CommandReadFromPhysical,
-          # Memory read
-          CommandMemoryRead,
-          ], {
-            'filename': None,
-            'fields': {
-              'GUEST_CS_BASE': self.debugClient.vmcs.fields['GUEST_CS_BASE']
-              },
-            })
-        self.changeState(s)
-        s.start()
-      else: 
-        self.debugClient.sendContinue()
-        self.changeState(ServerStateRunning(self.debugClient))
+      self.debugClient.sendContinue()
+      self.changeState(ServerStateRunning(self.debugClient))
     elif input == 'up':
       self.debugClient.gui.messageFocusDec()
     elif input == 'down':
@@ -587,14 +624,15 @@ class ServerStateWaiting(ServerState):
       # Set / unset  senddebug for MTF and gui handling
       if self.debugClient.mTF:
         self.debugClient.endMTF()
-        self.debugClient.vmm.sendDebug['MONITOR_TRAP_FLAG'].active = 0
+        self.debugClient.vmm.unsetGlbl('MONITOR_TRAP_FLAG')
       else:
         self.debugClient.setMTF()
-        self.debugClient.vmm.sendDebug['MONITOR_TRAP_FLAG'].active = 1
+        self.debugClient.vmm.setGlbl('MONITOR_TRAP_FLAG')
       # Launch the command
       params = {
         'mTF': self.debugClient.mTF,
         'fields': {'CPU_BASED_VM_EXEC_CONTROL': self.debugClient.vmcs.fields['CPU_BASED_VM_EXEC_CONTROL']},
+        'vmid': self.debugClient.vmid,
         'send_debug': self.debugClient.vmm.sendDebug
       }
       s = ServerStateCommand(self.debugClient, [
@@ -649,6 +687,25 @@ class ServerStateWaiting(ServerState):
         })
       self.changeState(s)
       s.start()
+    elif input == 'S':
+      # Set disassemble mode
+      self.debugClient.endDisass()
+      # Launch the command
+      s = ServerStateCommand(self.debugClient, [
+        # Walks the address
+        CommandWalkFromRSP,
+        LinearToPhysical,
+        # Write RSP for memory read
+        CommandReadFromPhysical,
+        # Memory read
+        CommandMemoryRead,
+        ], {
+          'core': self.debugClient.core,
+          'filename': None,
+          'vmid': self.debugClient.vmid,
+        })
+      self.changeState(s)
+      s.start()
     elif input == 'p':
       if len(self.debugClient.messages) == 0:
         return
@@ -663,7 +720,9 @@ class ServerStateWaiting(ServerState):
     else:
       self.usage()
   def notifyMessage(self, message):
-    raise BadReply(-1)
+    self.debugClient.info("Debug Client resetted", "Debug Client has been resetted. The host has rebooted or this is maybe a serious bug dude :(")
+    ServerStateRunning.notifyMessage(ServerStateRunning(self.debugClient), message)
+    # raise BadReply(-1)
   def usage(self):
     self.debugClient.gui.display("""\
 Usage()
@@ -675,6 +734,8 @@ v : Toggle VMX preemption timer
 r : Dump memory
 w : Write memory
 d : Try to disassemble data
+D : Try to disassemble from RIP
+S : Dump the stack of the current VM
 p : Print raw message dat
 R : Print the regs
 q : Quit
@@ -699,7 +760,7 @@ class ShellWrite(Shell):
     return 1
   def submit(self):
     s = ServerStateCommand(self.debugClient, [CommandMemoryWrite],
-      {'address': self.address, 'memory': self.data, 'ok': 0})
+      {'address': self.address, 'data': self.data, 'ok': 0})
     self.changeState(s)
     s.start()
   def complete(self, t):
@@ -723,6 +784,7 @@ class ShellLinearToPhysical(Shell):
   def submit(self):
     params = {
       'core': None,
+      'vmid': self.debugClient.vmid,
       'fields': {'GUEST_IA32_EFER': self.debugClient.vmcs.fields['GUEST_IA32_EFER']},
       'linear': self.linear
     }

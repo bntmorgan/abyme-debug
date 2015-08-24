@@ -409,19 +409,35 @@ class MessageVMCSRead(MessageOut):
   def formatFull(self):
     return MessageOut.formatFull(self)
 
+# XXX
+import log
+
 class MessageSendDebug(MessageOut):
-  def __init__(self, sendDebug = {}):
+  def __init__(self, sendDebug = {}, vmid = 0):
     MessageOut.__init__(self)
     self.messageType = Message.SendDebug
     self.sendDebug = sendDebug
-    self.r = [0] * ExitReason.number
+    self.vmid = vmid
+    self.VM_NB = len(sendDebug)
+    self.r = [[]] * self.VM_NB
   def pack(self):
     s = MessageOut.pack(self)
-    for k, r in self.sendDebug.iteritems():
-      self.r[r.encoding] = r.active
-    for i in range(0, ExitReason.number):
-      t = pack('B', self.r[i])
-      s = s + t
+    # Prepare data
+    log.log(self.r)
+    for i in range(0, self.VM_NB):
+      t = [0] * ExitReason.number
+      for k, r in self.sendDebug[i].iteritems():
+        t[r.encoding] = r.active
+      log.log(t)
+      log.log(len(t))
+      self.r[i] = list(t)
+    log.log("yolo")
+    log.log(self.r)
+    # Prepare the frame
+    for i in range(0, self.VM_NB):
+      for j in range(0, ExitReason.number):
+        t = pack('B', self.r[i][j])
+        s = s + t
     return s
   def format(self):
     return "%s SendDebug" % (MessageOut.format(self))
@@ -429,10 +445,11 @@ class MessageSendDebug(MessageOut):
     return MessageOut.formatFull(self)
 
 class MessageVMCSWrite(MessageOut):
-  def __init__(self, fields = []):
+  def __init__(self, fields = [], vmid = 0):
     MessageOut.__init__(self)
     self.messageType = Message.VMCSWrite
     self.fields = fields
+    self.vmid = vmid
   def pack(self):
     s = MessageOut.pack(self)
     for k, f in self.fields.iteritems():
