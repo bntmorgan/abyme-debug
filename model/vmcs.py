@@ -47,11 +47,9 @@ class VMCSFieldNW(VMCSField):
 
 class VMCS(object):
   def __init__(self):
-    # XXX
-    self.core = None
     self.fields = {}
   @staticmethod
-  def createVMCS(core = None):
+  def createVMCS():
     vmcs = VMCS()
     f = None
     for k, v in Encoding.e.iteritems():

@@ -161,7 +161,7 @@ class LinearToPhysical(CommandMultiple):
     # The result
     self.params['physical'] = 0
     # Algorithm data
-    self.core = None
+    self.core = Core()
     self.IA32_EFER = None
     self.cr3 = 0
     self.PDPTEAddress = 0

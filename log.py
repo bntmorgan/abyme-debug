@@ -1,8 +1,15 @@
 import sys, time
 
 timestamp = time.time()
-fd = open("log", "w")
+fd = None
+prefix = 'none'
 fdinfo = {}
+
+def setup(pf):
+  global fd
+  global prefix
+  prefix = pf
+  fd = open("log_%s" % (prefix), "w")
 
 #
 # 'NOTICE'
@@ -14,10 +21,11 @@ def log(s, level = 'NOTICE'):
   fd.flush()
 
 def info(l, s):
+  global fdinfo
   try:
     fdi = fdinfo[l]
   except:
-    fdinfo[l] = open("info_%d" % (l), "w")
+    fdinfo[l] = open("info_%s_%d" % (prefix, l), "w")
     fdi = fdinfo[l]
   fdi.write(s)
   fdi.flush()

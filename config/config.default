@@ -2,3 +2,4 @@ IF=eth0
 ETHERTYPE=0xb00b
 MAC_SOURCE=ff:ff:ff:ff:ff:ff
 MAC_DEST=ff:ff:ff:ff:ff:ff
+LOG_PREFIX=none

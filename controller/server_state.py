@@ -593,8 +593,6 @@ class ServerStateWaiting(ServerState):
       self.debugClient.sendContinue()
       # server is now running
       self.changeState(ServerStateRunning(self.debugClient))
-      # Expire the cache
-      self.debugClient.cacheExpired()
     elif input == 'v':
       if self.debugClient.vPT:
         self.debugClient.endVPT()
@@ -714,7 +712,7 @@ class ServerStateWaiting(ServerState):
       self.changeState(ServerStateShell(self.debugClient))
     elif input == 'R':
       s = ServerStateCommand(self.debugClient, [CommandCoreRegsRead],
-        {'core': None})
+        {'core': Core()})
       self.changeState(s)
       s.start()
     else:
@@ -783,7 +781,7 @@ class ShellLinearToPhysical(Shell):
     return 1
   def submit(self):
     params = {
-      'core': None,
+      'core': Core(),
       'vmid': self.debugClient.vmid,
       'fields': {'GUEST_IA32_EFER': self.debugClient.vmcs.fields['GUEST_IA32_EFER']},
       'linear': self.linear

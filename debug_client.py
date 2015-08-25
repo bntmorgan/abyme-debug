@@ -112,9 +112,6 @@ class DebugClient():
     self.gui.messageFocus(message.number)
   def info(self, label, text):
     self.addMessage(Info(label, text))
-  def cacheExpired(self):
-    self.core = None
-    self.vmcs = VMCS.createVMCS()
   def setVmid(self, vmid):
     self.vmid = vmid
     self.gui.setVmid(self.vmid, self.core.regs.rip)
@@ -123,12 +120,13 @@ class DebugClient():
 
 # Debug client main
 try: 
-  log.log('------ STARTUP ------')
-  ServerStateMinibuf.restoreHistories()
   if (len(sys.argv) < 2):
     debugClient = DebugClient(Config('config/debug_client.config'))
   else:
     debugClient = DebugClient(Config(sys.argv[1]))
+  log.setup(debugClient.config['LOG_PREFIX'])
+  log.log('------ STARTUP ------')
+  ServerStateMinibuf.restoreHistories()
   debugClient.run()
 except BadReply, msg:
   print("%s\n" % (msg))
@@ -137,4 +135,3 @@ finally:
   ServerStateMinibuf.saveHistories()
   log.log('------ GOODBYE ------')
   log.logClose()
-#   log.infoClose()
