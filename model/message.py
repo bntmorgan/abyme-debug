@@ -39,10 +39,10 @@ class Message(ListItem):
       UnhandledVMExit,
       VMCSRead,
       VMCSData,
-      VMMPanic,
       VMCSWrite,
       UserDefined,
       SendDebug,
+      Netboot,
   ) = range(17)
   def __init__(self):
     self.messageType = Message.Message
@@ -114,14 +114,14 @@ class MessageNetwork(Message):
       m = MessageVMCSRead()
     elif m.messageType == Message.VMCSData:
       m = MessageVMCSData()
-    elif m.messageType == Message.VMMPanic:
-      m = MessageVMMPanic()
     elif m.messageType == Message.VMCSWrite:
       m = MessageVMCSWrite()
     elif m.messageType == Message.UserDefined:
       m = MessageUserDefined()
     elif m.messageType == Message.SendDebug:
       m = MessageSendDebug()
+    elif m.messageType == Message.Netboot:
+      m = MessageNetboot()
     #real unpack if changed
     m.unPack(frame, raw)
     return m
@@ -171,16 +171,15 @@ class MessageInfo(MessageIn):
     MessageIn.__init__(self)
     self.messageType = Message.Info
     self.length = 0
-    self.level = 0
+    self.vmid = 0
     self.data = None
   def format(self):
     return "%s MessageInfo" % (MessageIn.format(self))
   def unPack(self, frame, raw):
     MessageIn.unPack(self, frame, raw)
-    t = unpack('QI', self.raw[2:14])
+    t = unpack('Q', self.raw[2:10])
     self.length = t[0]
-    self.level = t[1]
-    self.data = self.raw[14:14 + self.length]
+    self.data = self.raw[10:10 + self.length]
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nlength : 0x%x\n%s" % (self.length,
       self.data)
@@ -277,28 +276,6 @@ class MessageVMCSData(MessageIn):
       s = s + f.format() + "\n"
     return MessageIn.formatFull(self) + '\n' + s
 
-panic = {
-  0: 'VMM_PANIC_RDMSR',
-  1: 'VMM_PANIC_WRMSR',
-  2: 'VMM_PANIC_CR_ACCESS',
-  3: 'VMM_PANIC_UNKNOWN_CPU_MODE',
-  4: 'VMM_PANIC_IO',
-  5: 'VMM_PANIC_XSETBV'
-};
-
-class MessageVMMPanic(MessageIn):
-  def __init__(self):
-    MessageIn.__init__(self)
-    self.messageType = Message.VMMPanic
-    self.code = 0
-    self.extra = 0
-  def unPack(self, frame, raw):
-    MessageIn.unPack(self, frame, raw)
-    self.code = unpack("Q", self.raw[2:10])[0]
-    self.extra = unpack("Q", self.raw[10:18])[0]
-  def format(self):
-    return "%s Vmm Panic : code %d, extra %d (%s)" % (MessageIn.format(self), self.code, self.extra, panic[self.code])
-
 class MessageUserDefined(MessageIn):
   # Message Types
   (
@@ -332,6 +309,17 @@ class MessageUserDefined(MessageIn):
       result += "%016X   %-*s   %s\n" % (n, length * 3, hexa, s)
       n += length
     return result
+
+class MessageNetboot(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.Netboot
+  def format(self):
+    return "%s Netboot" % (MessageIn.format(self))
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nNetboot request :)"
 
 '''
 Output messages
@@ -375,6 +363,11 @@ class MessageMemoryWrite(MessageOut):
     self.data = data
   def pack(self):
     return MessageOut.pack(self) + pack('QQ', self.address, self.length) + self.data
+  def unPack(self, frame, raw):
+    MessageOut.unPack(self, frame, raw)
+    t = unpack('QQ', self.raw[2:18])
+    self.address = t[0]
+    self.length = t[1]
   def format(self):
     return "%s MemoryWrite" % (MessageOut.format(self))
 

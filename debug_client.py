@@ -59,7 +59,7 @@ class DebugClient():
     log.log("Receiving %s" % (message.__class__.__name__))
     # XXX appending MessageInfo to a log file
     if message.messageType == Message.Info:
-      log.info(message.level, message.getString())
+      log.info(message.vmid, message.getString())
     else:
       if message.messageType == Message.CoreRegsData or message.messageType == Message.VMExit:
         # Update debug_client core

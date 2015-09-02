@@ -7,6 +7,7 @@ from controller.command import *
 import log
 import stat
 import pickle
+import os
 from network import Network
 from model.vmm import *
 
@@ -33,8 +34,8 @@ class ServerStateMinibuf(ServerState):
   @staticmethod
   def saveHistories():
     for cclass in ServerStateMinibuf.__subclasses__():
-      log.log(cclass.__name__)
-      log.log(cclass.history)
+      # log.log(cclass.__name__)
+      # log.log(cclass.history)
       try:
         pickle.dump(cclass.history, open(".history_%s" % (cclass.__name__), 'w'))
       except:
@@ -42,12 +43,12 @@ class ServerStateMinibuf(ServerState):
   @staticmethod
   def restoreHistories():
     for cclass in ServerStateMinibuf.__subclasses__():
-      log.log(cclass.__name__)
+      # log.log(cclass.__name__)
       try:
         cclass.history = pickle.load(open(".history_%s" % (cclass.__name__), 'r'))
       except:
         cclass.history = []
-      log.log(cclass.history)
+      # log.log(cclass.history)
   def __init__(self, debugClient, label):
     ServerState.__init__(self, debugClient)
     self.bottomBar = self.debugClient.gui.bottomBar
@@ -168,6 +169,45 @@ class ServerStateReply(ServerState):
 def wrapper(func, args):
   func(*args)
 
+class ServerStateNetboot(ServerStateReply):
+  chunkSize = 0x400
+  def __init__(self, debugClient, address):
+    ServerStateReply.__init__(self, debugClient)
+    #  XXX : Opens the efi image to netboot
+    self.imagePath = "../uefi/binary/drivers/vmm_rec_0/efi.efi"
+    self.size = os.path.getsize(self.imagePath)
+    self.fd = open(self.imagePath, "rb")
+    self.sent = 0
+    self.sending = 0
+    self.buf = None # Sending buffer
+    self.address = address
+  def notifyMessage(self, message):
+    if not isinstance(message, MessageCommit):
+      raise BadReply(self.command.message.messageType)
+    if message.ok == 0:
+      self.debugClient.info("Netboot failed", "failed to write in memory")
+      self.changeState(ServerStateWaiting(self.debugClient))
+      return
+    if self.sending == 0: # Last write
+      self.debugClient.info("Netboot succeed", "0x%08x bytes send" % (self.sent))
+      self.changeState(ServerStateRunning(self.debugClient))
+      return
+    self.sent = self.sent + self.sending
+    self.upload() # Uploading the rest of the file
+  def upload(self):
+    if self.sent == self.size: # end of file
+      self.buf = ""
+    else:
+      self.buf = self.fd.read(ServerStateNetboot.chunkSize)
+    self.sending = len(self.buf)
+    self.mw = MessageMemoryWrite(self.address + self.sent, self.buf)
+    log.log("uploading 0x%x bytes" % (self.sending))
+    self.debugClient.sendMessage(self.mw)
+    self.debugClient.info("Uploading %.2f %%" % ((self.sent * 1.) / self.size * 100), 
+        "size(0x%08x)\n" % (self.size) +
+        "sending(0x%08x)\n" % (self.sending) +
+        "sent(0x%08x)\n" % (self.sent))
+
 class ServerStateCommand(ServerStateReply):
   def __init__(self, debugClient, commands = [], params = {}, callback = None):
     ServerStateReply.__init__(self, debugClient)
@@ -269,11 +309,11 @@ class ServerStateRunning(ServerState):
       self.usage()
   def notifyMessage(self, message, bp = True):
     # Handle the message according to the type
-    if message.messageType == Message.UnhandledVMExit:
-      ## self.debugClient.setStep()
-      # Server is now waiting
-      ## self.changeState(ServerStateWaiting(self.debugClient))
-      self.debugClient.sendContinue()
+    if message.messageType == Message.Netboot:
+      # Server is now Netbootloading
+      s = ServerStateNetboot(self.debugClient, 0xcafebabe)
+      self.changeState(s)
+      s.upload()
     elif message.messageType == Message.VMExit:
       # if we are not in step mode we directly continue the execution
       self.debugClient.vmm.set(self.debugClient.vmid, ExitReason.e[message.exitReason]['name'])
@@ -306,9 +346,6 @@ class ServerStateRunning(ServerState):
           self.changeState(ServerStateWaiting(self.debugClient))
       else:
         self.debugClient.sendContinue()
-    elif message.messageType == Message.VMMPanic:
-      self.debugClient.setStep()
-      self.changeState(ServerStateWaiting(self.debugClient))
     # Demo EARS
     elif message.messageType == Message.UserDefined:
       if message.userType == MessageUserDefined.LogCR3:
@@ -802,18 +839,3 @@ class ShellLinearToPhysical(Shell):
     self.debugClient.gui.display("Usage()\n type an address and a carriage return")
   def cancel(self):
     pass
-
-class ServerStatePanic(ServerState):
-  def __init__(self, debugClient):
-    ServerState.__init__(self, debugClient)
-  def notifyUserInput(self, input):
-    if input in ('q', 'Q'):
-      raise urwid.ExitMainLoop()
-    elif input == 'h':
-      self.usage()
-    elif input == 'f':
-      self.changeState(ServerStateWaiting(self.debugClient))
-    else:
-      self.usage()
-  def usage(self):
-    self.debugClient.gui.display("Usage()\nq : Quit\nf : Force waiting state (if VMM rebooted)")
