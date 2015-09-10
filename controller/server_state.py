@@ -231,6 +231,13 @@ class ServerStateCommand(ServerStateReply):
     while 1:
       self.command.finished = True
       self.command.execute()
+      if self.isCommandSend():
+        self.send()
+        self.command.message = None
+        self.command.messageOut = None
+      if self.isCommandExpected():
+        self.command.expected = None
+        break
       if self.isCommandFinished():
         if self.isCommandNext():
           self.commands.popleft()
@@ -242,12 +249,6 @@ class ServerStateCommand(ServerStateReply):
           else: # Or go back to ServerStateWaiting
             self.changeState(ServerStateWaiting(self.debugClient))
           break
-      elif self.isCommandExpected():
-        self.send()
-        self.command.message = None
-        self.command.expected = None
-        self.command.messageOut = None
-        break
   def send(self):
     self.debugClient.sendMessage(self.command.messageOut)
   def isCommandNext(self):
@@ -255,7 +256,9 @@ class ServerStateCommand(ServerStateReply):
   def isCommandFinished(self):
     return self.command.finished
   def isCommandExpected(self):
-    return self.command.expected != None or self.command.messageOut != None
+    return self.command.expected != None
+  def isCommandSend(self):
+    return self.command.messageOut != None
 
 class ShellRead(Shell):
   def __init__(self, debugClient):
@@ -286,6 +289,23 @@ class ShellRead(Shell):
     return []
   def usage(self):
     self.debugClient.gui.display("Usage()\n Type an address, size and filename if needed")
+  def cancel(self):
+    pass
+
+class ShellReset(Shell):
+  def __init__(self, debugClient):
+    Shell.__init__(self, debugClient)
+  def validate(self, t):
+    return 1
+  def submit(self):
+    self.debugClient.sendMessage(MessageReset())
+    s = ServerStateRunning(self.debugClient)
+    self.changeState(s)
+  def complete(self, t):
+    self.usage()
+    return []
+  def usage(self):
+    self.debugClient.gui.display("Usage()\n Carriage return !")
   def cancel(self):
     pass
 
@@ -451,6 +471,7 @@ class ServerStateShell(ServerStateMinibuf):
             "vmcs read",
             "walk",
             "vmexit",
+            "reset",
             "<line>",
         ]
         self.usage()
@@ -458,7 +479,7 @@ class ServerStateShell(ServerStateMinibuf):
     if self.shell is not None:
       self.shell.usage()
     else:
-      self.debugClient.gui.display("write\nread\nvmcs read\nwalk\nvmexit\n<line>")
+      self.debugClient.gui.display("write\nread\nvmcs read\nwalk\nvmexit\nreset\n<line>")
   def getShell(self, t):
     self.shell = None
     self.args = t
@@ -472,6 +493,8 @@ class ServerStateShell(ServerStateMinibuf):
     elif test.test("^[ ]*vmcs read (.*)$", t):
       self.shell = ShellVMCS(self.debugClient)
       self.args = test.m.group(1)
+    elif test.test("^[ ]*reset$", t):
+      self.shell = ShellReset(self.debugClient)
     elif test.test("^[ ]*vmexit (.*)$", t):
       self.shell = ShellSendDebug(self.debugClient)
       self.args = test.m.group(1)

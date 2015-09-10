@@ -43,7 +43,8 @@ class Message(ListItem):
       UserDefined,
       SendDebug,
       Netboot,
-  ) = range(17)
+      Reset,
+  ) = range(18)
   def __init__(self):
     self.messageType = Message.Message
     # GUI
@@ -122,6 +123,8 @@ class MessageNetwork(Message):
       m = MessageSendDebug()
     elif m.messageType == Message.Netboot:
       m = MessageNetboot()
+    elif m.messageType == Message.Reset:
+      m = MessageReset()
     #real unpack if changed
     m.unPack(frame, raw)
     return m
@@ -320,6 +323,17 @@ class MessageNetboot(MessageIn):
     MessageIn.unPack(self, frame, raw)
   def formatFull(self):
     return MessageIn.formatFull(self) + "\nNetboot request :)"
+
+class MessageReset(MessageIn):
+  def __init__(self):
+    MessageIn.__init__(self)
+    self.messageType = Message.Reset
+  def format(self):
+    return "%s Reset" % (MessageIn.format(self))
+  def unPack(self, frame, raw):
+    MessageIn.unPack(self, frame, raw)
+  def formatFull(self):
+    return MessageIn.formatFull(self) + "\nReset request :)"
 
 '''
 Output messages

@@ -26,6 +26,10 @@ class Command(object):
     self.messageOut = message
     self.expected = expected
     self.finished = False
+  def send(self, message):
+    self.messageOut = message
+    self.expected = None
+    self.finished = True
   def info(self, label, text):
     if self.params['debugClient']:
       self.params['debugClient'].info(label, text)
