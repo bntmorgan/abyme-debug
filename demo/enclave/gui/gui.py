@@ -8,6 +8,7 @@ import os
 import stat
 import struct
 import socket
+import math
 
 # Le dialogue entre la gui et les debuggeur se fait via udp.
 def open_udp(port):
@@ -31,13 +32,17 @@ def read_udp(s):
 # d'identifier les coupes.
 # limits correspond a priori au zones ou les donnees sont agglomerees.
 # minmax correspond, pour chacune de ces zones, au min et au max.
-limits = [[0, 0.08e10], [0.08e10, 0.25e10],  [0.25e10, 0.5e10], [1e10, 2e10]]
-minmax = [[-1, -1], [-1, -1], [-1, -1],   [-1, -1]]
-#limits = [[0, 0.4e10], [1.68e10, 2.0e10]]
+#limits = [[0, 1.588e+09], [5.588e+09, 1.509e10], [1.909e+10, 1.845e+19]]
+#minmax = [[-1, -1], [-1, -1], [-1, -1]]
+#limits = [[0, 0.08e10], [0.08e10, 0.25e10],  [0.25e10, 0.5e10], [1e10, 2e10]]
+#minmax = [[-1, -1], [-1, -1], [-1, -1],   [-1, -1]]
+# limits = [[0, 0.4e10], [1.68e10, 2.0e10]]
 #minmax = [[0, 0.4e10], [1.68e10, 2.0e10]]
+limits = [[0, 22], [22.01, 23.55], [23.58, 24]]
+minmax = [[-1, -1], [-1, -1], [-1, -1]]
 
 # Nombre de points dans les figures et points.
-NBCR3 = 10000
+NBCR3 = 5000
 NBMD5HV = 100
 NBMD5FUN = 100
 xcr3 = range(NBCR3)
@@ -61,12 +66,12 @@ fig = plt.figure()
 plt.subplots_adjust(left=0.04, right=0.98, top=0.95, bottom=0.06, wspace=0.1)
 
 ax = plt.subplot2grid((2,2), (0,0), rowspan=2)
-cr3, = plt.plot(xcr3, ycr3, 'ro', markersize=10.0)
+cr3, = plt.plot(xcr3, ycr3, 'ro', markersize=10)
 plt.title('Running process', fontsize=18)
 plt.xlabel('Scheduling', fontsize=14)
 plt.ylabel('Process identifier', fontsize=14)
 frame = plt.gca()
-frame.set_ylim([0, 0.16e10])
+frame.set_ylim([0, 24])
 #frame.set_ylim([0, 2.0e10])
 
 frame.axes.get_xaxis().set_ticks([])
@@ -126,6 +131,7 @@ def animate(i):
       while len(cr3_pending) >= 8:
         value = struct.unpack('q', cr3_pending[:8])[0]
         value = value & 0xfffffffffffff000
+        value = math.log(value)
         # mise a jour des bornes
         for i in range(len(limits)):
           if value >= limits[i][0] and value <= limits[i][1]:

@@ -299,6 +299,7 @@ class ShellReset(Shell):
     return 1
   def submit(self):
     self.debugClient.sendMessage(MessageReset())
+    self.debugClient.endStep()
     s = ServerStateRunning(self.debugClient)
     self.changeState(s)
   def complete(self, t):
