@@ -75,16 +75,16 @@ class MessageNetwork(Message):
     return pack('BB', self.messageType, self.vmid)
   @staticmethod
   def ethAddr (a):
-    b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]), ord(a[3]), ord(a[4]), ord(a[5]))
+    b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]), ord(a[1]), ord(a[2]),	ord(a[3]), ord(a[4]), ord(a[5]))
     return b
   def format(self):
     l = "%04d B" % (len(self.raw))
     # new length addrSource addrDest type
-    return Message.format(self) + "%s %s %s" % (l, MessageNetwork.ethAddr(self.frame.macSource), MessageNetwork.ethAddr(self.frame.macDest))
+    return Message.format(self) + "%s %s %s" % (l, self.frame.ipSource, self.frame.ipDest)
   def formatFull(self):
     l = "%04d B" % (len(self.raw))
     # new length addrSource addrDest type
-    return Message.formatFull(self) + "length : %s\nsrc address : %s\ndest address : %s" % (l, MessageNetwork.ethAddr(self.frame.macSource), MessageNetwork.ethAddr(self.frame.macDest))
+    return Message.formatFull(self) + "length : %s\nsrc address : %s\ndest address : %s" % (l, self.frame.ipSource, self.frame.ipDest)
   @staticmethod
   def createMessage(frame, raw):
     # get the type of the message

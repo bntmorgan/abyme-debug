@@ -5,18 +5,18 @@ import binascii
 from model.message import *
 
 class EthernetFrame():
-  def __init__(self, packet):
+  def __init__(self, packet, ipSrc, ipDst):
     #parse ethernet header
-    headerLength = 14
-    header = packet[:headerLength]
-    eth = unpack('!6s6sH', header)
-    protocol = eth[2]
+    #headerLength = 14
+    #header = packet[:headerLength]
+    #eth = unpack('!6s6sH', header)
+    #protocol = eth[2]
     # Ethernet
-    self.macDest = packet[0:6]
-    self.macSource = packet[6:12]
-    self.protocol = protocol
-    self.headerLength = headerLength
-    self.payload = packet[headerLength:]
+    self.ipDest = ipDst
+    self.ipSource = ipSrc
+    #self.protocol = protocol
+    #self.headerLength = headerLength
+    self.payload = packet#[headerLength:]
 
 class Network():
   def __init__(self):
@@ -39,7 +39,7 @@ class Network():
   def sendTo(port, data):
     sock = socket.socket(socket.AF_INET, # Internet
                          socket.SOCK_DGRAM) # UDP
-    sock.sendto(data, ("127.0.0.1", port))
+    sock.sendto(data, ("192.168.0.2", port))
     sock.close()
   def createSocket(self):
     # Get the ethertype from configuration
@@ -47,8 +47,8 @@ class Network():
     self.macSource = Network.macStrToBin(self.debugClient.config['MAC_SOURCE'])
     self.macDest = Network.macStrToBin(self.debugClient.config['MAC_DEST'])
     try:
-      self.socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
-      self.socket.bind((self.debugClient.config['IF'], 0))
+      self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+      self.socket.bind(("192.168.0.1", 6666))
     except socket.error , msg:
       print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
       sys.exit()
@@ -56,19 +56,20 @@ class Network():
     packet = self.socket.recvfrom(65565)
     # Create ethernet fream object filter protocol
     packet = packet[0]
-    frame = EthernetFrame(packet)
-    if (frame.protocol == self.ethertype):
-      self.debugClient.notifyMessage(MessageNetwork.createMessage(frame, frame.payload))
-      return 1
-    return 0
+    frame = EthernetFrame(packet, "192.168.0.2", "192.168.0.1")
+    #print frame.macSource
+    #if (frame.protocol == self.ethertype):
+    self.debugClient.notifyMessage(MessageNetwork.createMessage(frame, 
+			frame.payload))
+    return 1
   def createFrame(self, payload):
     return self.padding(pack('!6s6sH', self.macDest, self.macSource,
       self.ethertype) + payload)
   def send(self, message):
     payload = message.pack()
-    frame = self.createFrame(payload)
-    self.socket.send(frame)
-    message.frame = EthernetFrame(frame)
+    frame = payload#self.createFrame(payload)
+    self.socket.sendto(frame, ("192.168.0.2", 6666))
+    message.frame = EthernetFrame(frame, "192.168.0.1", "192.168.0.2")
     message.raw = message.frame.payload
   def padding(self, frame):
     minlen = 14 + 42 # size of head plus minimum payload
