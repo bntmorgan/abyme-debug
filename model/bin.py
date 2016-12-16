@@ -42,6 +42,7 @@ class Bin(object):
     if self.mode == CoreMode.V8086 or self.mode == CoreMode.REAL:
       p.append('-Maddr16,data16')
     elif self.mode == CoreMode.PROTECTED:
+      pass
       p.append('-Mi386')
     elif self.mode == CoreMode.IA32E:
       p.append('-Mx86-64')

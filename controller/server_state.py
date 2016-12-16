@@ -645,6 +645,10 @@ class ServerStateWaiting(ServerState):
       self.debugClient.setStep()
       self.debugClient.sendContinue()
       self.changeState(ServerStateRunning(self.debugClient))
+    elif input == 'enter':
+      self.debugClient.gui.messageDisplayInc()
+    elif input == 'backspace':
+      self.debugClient.gui.messageDisplayDec()
     elif input == 'up':
       self.debugClient.gui.messageFocusDec()
     elif input == 'down':

@@ -117,8 +117,8 @@ class CommandReadFromPhysical(Command):
   def __init__(self, params):
     Command.__init__(self, params)
   def execute(self):
-    self.params['address'] = self.params['physical']
-    self.params['length'] = 0x100
+    self.params['address'] = self.params['physical'] & 0xfffffffffffff000
+    self.params['length'] = 0x400
 
 class CommandVMCSRead(CommandMultiple):
   def __init__(self, params):

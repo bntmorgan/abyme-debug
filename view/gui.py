@@ -3,6 +3,7 @@ from struct import *
 import socket, sys
 
 import urwid
+import pprint
 
 from model.message import *
 from model.bin import Bin
@@ -51,17 +52,20 @@ class Gui():
 #                                                `--`-'     `--`-'                      
 # """
   def __init__(self):
+    # XXX
+    urwid.ListBox.ignore_focus = True
     # pointers
     self.network = None
     self.debugClient = None
     # graphical components
-    self.listContent = None
+    self.listMessages = None
+    self.listContentMessages = None
+    self.listDisplay = None
+    self.listContentDisplay = None
     self.title = None
     self.minibuf = None
-    self.listBox = None
     self.head = None
     self.top = None
-    self.text = None
     self.bottomBar = None
     self.execMode = None
     self.mTF = None
@@ -77,8 +81,10 @@ class Gui():
     self.initGraphicalComponents()
 
   def initGraphicalComponents(self):
-    self.listContent = urwid.SimpleListWalker([])
-    self.listBox = urwid.ListBox(self.listContent)
+    self.listContentMessages = urwid.SimpleListWalker([])
+    self.listMessages = urwid.ListBox(self.listContentMessages)
+    self.listContentDisplay = urwid.SimpleListWalker([])
+    self.listDisplay = urwid.ListBox(self.listContentDisplay)
     # List legend
     self.title = urwid.Text("#    N Length Source address    Dest address      Type", wrap='clip')
     head = urwid.AttrMap(self.title, 'header')
@@ -97,7 +103,7 @@ class Gui():
     self.endDisass()
     self.setVmid(0, 0)
     widgetsColumns = [
-        (5, urwid.AttrMap(self.execMode, 'flags')), 
+        (5, urwid.AttrMap(self.execMode, 'flags')),
         (5, urwid.AttrMap(self.mTF, 'flags')),
         (5, urwid.AttrMap(self.vPT, 'flags')),
         (5, urwid.AttrMap(self.disass, 'flags')),
@@ -105,11 +111,12 @@ class Gui():
         (22, urwid.AttrMap(self.vmexit, 'flags'))]
     self.bottomBar = urwid.Columns(widgetsColumns)
     widgetsPile = [
-        urwid.Frame(self.listBox, head, bottom),
-        urwid.AttrMap(urwid.Filler(self.text, valign = 'top'), 'text'),
+        urwid.Frame(self.listMessages, head, bottom),
+        self.listDisplay,
         (1, urwid.Filler(self.bottomBar))]
     self.top = urwid.Pile(widgetsPile);
-    urwid.connect_signal(self.listContent, "modified", self.listBoxModified)
+    urwid.connect_signal(self.listContentMessages, "modified", self.listMessagesModified)
+    urwid.connect_signal(self.listContentDisplay, "modified", self.listDisplayModified)
   def setTitle(self, title):
     self.title.set_text(title)
   def setMinibuf(self, minibuf):
@@ -125,40 +132,60 @@ class Gui():
   def notifyMessage(self, message):
     t = urwid.Text(message.format())
     # Add the message to the list
-    self.listContent.append(urwid.AttrMap(t, None, 'reveal focus'))
-  def listBoxModified(self):
-    m = self.debugClient.messages[self.debugClient.gui.listBox.focus_position]
+    self.listContentMessages.append(urwid.AttrMap(t, None, 'reveal focus'))
+  def listDisplayModified(self):
+    pass
+  def listMessagesModified(self):
+    m = self.debugClient.messages[self.debugClient.gui.listMessages.focus_position]
     if isinstance(m, MessageMemoryData) and self.debugClient.disass:
       b = Bin(m.data, m.address, self.debugClient.core.getMode())
       self.debugClient.gui.display(b.disasm())
       b = None
     else:
       self.display(m.formatFull())
-    self.setMinibuf("%d" % (self.listBox.focus_position))
+    self.setMinibuf("%d" % (self.listMessages.focus_position))
   def messageFocus(self, number):
     # Refresh focus
     if len(self.debugClient.messages) > number and number >= 0:
-      self.listBox.focus_position = number
+      self.listMessages.focus_position = number
   def focusMinibuf(self):
     self.top.focus_position = 2
+  def focusDisplay(self):
+    self.top.focus_position = 1
   def focusList(self):
     self.top.focus_position = 0
+  def messageDisplayInc(self):
+    log.log("Display Inc")
+    if self.listDisplay.focus_position < len(self.listContentDisplay) - 1:
+      self.listDisplay.focus_position += 1
+      # self.focusDisplay()
+  def messageDisplayDec(self):
+    log.log("Display Dec")
+    if self.listDisplay.focus_position > 0:
+      self.listDisplay.focus_position -= 1
+      # self.focusDisplay()
   def messageFocusInc(self):
     log.log("Inc")
-    if len(self.debugClient.messages) > 0 and self.listBox.focus_position < len(self.debugClient.messages) - 1:
-      self.focusList()
-      self.listBox.focus_position += 1
+    if len(self.debugClient.messages) > 0 and self.listMessages.focus_position < len(self.debugClient.messages) - 1:
+      self.listMessages.focus_position += 1
+    self.focusList()
   def messageFocusDec(self):
     log.log("Dec")
-    if len(self.debugClient.messages) > 0 and self.listBox.focus_position > 0:
-      self.focusList()
-      self.listBox.focus_position -= 1
+    if len(self.debugClient.messages) > 0 and self.listMessages.focus_position > 0:
+      self.listMessages.focus_position -= 1
+    self.focusList()
   def exitOnCr(self,  input):
     self.debugClient.notifyUserInput(input)
+    return True
   def filterInput(self, input, raw):
+    log.log("Filter !!!! %s" % (input))
+    if (input == 'up' or input == 'down'):
+      return None
     return input
   def display(self, text):
-    self.text.set_text(text)
+    while len(self.listContentDisplay) > 0 : self.listContentDisplay.pop()
+    for i in text.split('\n'):
+      self.listContentDisplay.append(urwid.AttrMap(urwid.Text(i), None, 'reveal focus'))
   def setStep(self):
     self.execMode.set_text("[STP]")
   def endStep(self):
