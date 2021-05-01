@@ -1,44 +1,33 @@
-                                                                                      
-                                                                ____                  
-  .--.--.                ,----..                              ,'  , `.                
- /  /    '.       ,---. /   /   \                ,---.     ,-+-,.' _ |                
-|  :  /`. /      /__./||   :     :              /__./|  ,-+-. ;   , ||                
-;  |  |--`  ,---.;  ; |.   |  ;. /         ,---.;  ; | ,--.'|'   |  ;|                
-|  :  ;_   /___/ \  | |.   ; /--`         /___/ \  | ||   |  ,', |  ':                
- \  \    `.\   ;  \ ' |;   | ;            \   ;  \ ' ||   | /  | |  ||                
-  `----.   \\   \  \: ||   : |             \   \  \: |'   | :  | :  |,                
-  __ \  \  | ;   \  ' ..   | '___           ;   \  ' .;   . |  ; |--'                 
- /  /`--'  /  \   \   ''   ; : .'|           \   \   '|   : |  | ,                    
-'--'.     /    \   `  ;'   | '/  :            \   `  ;|   : '  |/                     
-  `--'---'      :   \ ||   :    /              :   \ |;   | |`-'                      
-                 '---"  \   \ .'                '---" |   ;/                          
-                         `---`                        '---'                           
-      ,---,            ,---,                                                          
-    ,---.'|          ,---.'|            ,--,                                  __  ,-. 
-    |   | :          |   | :          ,'_ /|  ,----._,.  ,----._,.          ,' ,'/ /| 
-    |   | |   ,---.  :   : :     .--. |  | : /   /  ' / /   /  ' /   ,---.  '  | |' | 
-  ,--.__| |  /     \ :     |,-.,'_ /| :  . ||   :     ||   :     |  /     \ |  |   ,' 
- /   ,'   | /    /  ||   : '  ||  ' | |  . .|   | .\  .|   | .\  . /    /  |'  :  /   
-.   '  /  |.    ' / ||   |  / :|  | ' |  | |.   ; ';  |.   ; ';  |.    ' / ||  | '    
-'   ; |:  |'   ;   /|'   : |: |:  | : ;  ; |'   .   . |'   .   . |'   ;   /|;  : |    
-|   | '/  ''   |  / ||   | '/ :'  :  `--'   \`---`-'| | `---`-'| |'   |  / ||  , ;    
-|   :    :||   :    ||   :    |:  ,      .-./.'__/\_: | .'__/\_: ||   :    | ---'     
- \   \  /   \   \  / /    \  /  `--`----'    |   :    : |   :    : \   \  /           
-  `----'     `----'  `-'----'                 \   \  /   \   \  /   `----'            
-                                               `--`-'     `--`-'                      
 
-# Client de debug de l'hyperviseur SVC
+                                                                ____
+  .--.--.                ,----..                              ,'  , `.
+ /  /    '.       ,---. /   /   \                ,---.     ,-+-,.' _ |
+|  :  /`. /      /__./||   :     :              /__./|  ,-+-. ;   , ||
+;  |  |--`  ,---.;  ; |.   |  ;. /         ,---.;  ; | ,--.'|'   |  ;|
+|  :  ;_   /___/ \  | |.   ; /--`         /___/ \  | ||   |  ,', |  ':
+ \  \    `.\   ;  \ ' |;   | ;            \   ;  \ ' ||   | /  | |  ||
+  `----.   \\   \  \: ||   : |             \   \  \: |'   | :  | :  |,
+  __ \  \  | ;   \  ' ..   | '___           ;   \  ' .;   . |  ; |--'
+ /  /`--'  /  \   \   ''   ; : .'|           \   \   '|   : |  | ,
+'--'.     /    \   `  ;'   | '/  :            \   `  ;|   : '  |/
+  `--'---'      :   \ ||   :    /              :   \ |;   | |`-'
+                 '---"  \   \ .'                '---" |   ;/
+                         `---`                        '---'
+      ,---,            ,---,
+    ,---.'|          ,---.'|            ,--,                                  __  ,-.
+    |   | :          |   | :          ,'_ /|  ,----._,.  ,----._,.          ,' ,'/ /|
+    |   | |   ,---.  :   : :     .--. |  | : /   /  ' / /   /  ' /   ,---.  '  | |' |
+  ,--.__| |  /     \ :     |,-.,'_ /| :  . ||   :     ||   :     |  /     \ |  |   ,'
+ /   ,'   | /    /  ||   : '  ||  ' | |  . .|   | .\  .|   | .\  . /    /  |'  :  /
+.   '  /  |.    ' / ||   |  / :|  | ' |  | |.   ; ';  |.   ; ';  |.    ' / ||  | '
+'   ; |:  |'   ;   /|'   : |: |:  | : ;  ; |'   .   . |'   .   . |'   ;   /|;  : |
+|   | '/  ''   |  / ||   | '/ :'  :  `--'   \`---`-'| | `---`-'| |'   |  / ||  , ;
+|   :    :||   :    ||   :    |:  ,      .-./.'__/\_: | .'__/\_: ||   :    | ---'
+ \   \  /   \   \  / /    \  /  `--`----'    |   :    : |   :    : \   \  /
+  `----'     `----'  `-'----'                 \   \  /   \   \  /   `----'
+                                               `--`-'     `--`-'
 
-Ecrit en python, utilise la librairie de widgets console urwid (à base de curses).
+# Abyme hypervisor debug client
 
-# Description du workflow
-
-Toutes les interactions entre le serveur et le client seront acquitées. Si le serveur
-evoie ou reçois un message du client le client notifiera automatiquement ou
-manuellement via une entrée utilisateur de continuer l'exécution de la machine 
-virtuelle. Typiquement nosu auront le mode step ou continue. L'intérêt de l'aquitement
-est de permettre à l'utilisateur de repasser en mode stepper alors qu'il était en cont-
-inue. 
-Par acquittement on entends une commande du client au serveur. Soit une requête (dump
-de mémoire, récupération des champs de VMCS, des registres généraux, etc) soit une
-demande de continuation de l'exécution ou d'arrêt de la machine.
+Text interface written in python. Requires urwid python package.
+Uses udp 6666 ports
